@@ -159,7 +159,8 @@ manager.onError = function(url) {
 const loader = new THREE.GLTFLoader(manager);
 loader.load('3d/Scena.gltf', function(gltf) {
   //console.log(gltf);
-  addScene(gltf.scene)
+  //addScene(gltf.scene);
+  scene.add(gltf.scene);
 });
 
 
