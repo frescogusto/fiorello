@@ -2,10 +2,10 @@ var world, mass, body, shape, timeStep = 1 / 60,
   camera, scene, renderer, geometry, material, mesh, controls;
 
 // To be synced
-var meshes = [],
-  bodies = [],
-  objects = [];
+var objects = [];
 var N = 0;
+
+var modelUrl = '3d/Scena.gltf'
 
 initThree();
 initCannon();
@@ -27,9 +27,9 @@ function initCannon() {
   groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
   world.add(groundBody);
 
-  for (let index = 0; index < 10; index++) {
-    addObject(index)
-  }
+  // for (let index = 0; index < 10; index++) {
+  //   addObject(index)
+  // }
 
 }
 
@@ -48,7 +48,7 @@ function initThree() {
   material = new THREE.MeshLambertMaterial({
     color: 0x777777
   });
-  markerMaterial = new THREE.MeshLambertMaterial({
+  material2 = new THREE.MeshLambertMaterial({
     color: 0xff0000
   });
   //THREE.ColorUtils.adjustHSV( material.color, 0, 0, 0.9 );
@@ -88,11 +88,6 @@ function updatePhysics() {
 
   // Step the physics world
   world.step(timeStep);
-
-  for (let i = 0; i !== meshes.length; i++) {
-    meshes[i].position.copy(bodies[i].position);
-    meshes[i].quaternion.copy(bodies[i].quaternion);
-  }
 
   for (let i = 0; i !== objects.length; i++) {
     objects[i].position.copy(objects[i].body.position);
@@ -157,7 +152,7 @@ manager.onError = function(url) {
 };
 
 const loader = new THREE.GLTFLoader(manager);
-loader.load('3d/Scena.gltf', function(gltf) {
+loader.load(modelUrl, function(gltf) {
   //console.log(gltf);
   addScene(gltf.scene)
 });
