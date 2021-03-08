@@ -5,6 +5,8 @@ var world, mass, body, shape, timeStep = 1 / 60,
 objects = [];
 var N = 0;
 
+const loader = new THREE.GLTFLoader();
+
 initThree();
 initCannon();
 animate();
@@ -26,7 +28,7 @@ function initCannon() {
   world.add(groundBody);
 
   for (let index = 0; index < 10; index++) {
-    addObject(index * 1.5 - 5, 5, Math.random() * 3 )
+    addObject(index * 1.5 - 5, 5, Math.random() * 3, 'models/frigo.gltf' )
   }
 
 
@@ -93,6 +95,8 @@ function updatePhysics() {
   for (var i = 0; i !== objects.length; i++) {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
+    // objects[i].bounds.position.copy(objects[i].body.position);
+    // objects[i].bounds.quaternion.copy(objects[i].body.quaternion);
   }
 
   // Copy coordinates from Cannon.js to Three.js
@@ -107,25 +111,80 @@ function render() {
 
 }
 
-function addObject(x, y, z, mesh) {
-  var cubeGeo = new THREE.BoxGeometry(1, 1, 1, 10, 10);
-  var cubeMaterial = new THREE.MeshPhongMaterial({
-    color: 0x888888
-  });
-  cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-  scene.add(cubeMesh);
+function addObject(x, y, z, url) {
 
-  var mass = 5,
-    radius = 1;
-  boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
-  boxBody = new CANNON.Body({
-    mass: mass
-  });
+  loader.load(
+    // resource URL
+    url,
+    // called when the resource is loaded
+    function ( gltf ) {
 
-  boxBody.addShape(boxShape);
-  boxBody.position.set(x, y, z);
-  world.add(boxBody);
-  cubeMesh.body = boxBody;
+      gltf.scene.traverse(function (child) {
+        if(child.type == "Mesh") {
+          console.log(child.name)
+          if(child.name == "*") {
+            console.log(child);
+          }
+        }
+      });
+  
+      var obj = gltf.scene.children[0]
+      console.log(obj);
+      
+      obj.position.set(x,y,z)
+      obj.scale.set(0.4,0.4,0.4)
+      scene.add( obj );
 
-  objects.push(cubeMesh);
+      var mass = 5,
+        radius = 1;
+      boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+      boxBody = new CANNON.Body({
+        mass: mass
+      });
+
+    
+      boxBody.addShape(boxShape);
+      boxBody.position.set(x, y, z);
+      boxBody.quaternion.set(Math.random(), Math.random(), Math.random(), 1 );
+      world.add(boxBody);
+      obj.body = boxBody;
+      objects.push(obj);
+
+  
+    },
+    // called while loading is progressing
+    function ( xhr ) {
+  
+      console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+  
+    },
+    // called when loading has errors
+    function ( error ) {
+  
+      console.log( 'An error happened' );
+  
+    }
+  );
+
+
+  // var cubeGeo = new THREE.BoxGeometry(1, 1, 1, 10, 10);
+  // var cubeMaterial = new THREE.MeshPhongMaterial({
+  //   color: 0x888888
+  // });
+  // cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
+  // scene.add(cubeMesh);
+
+  // var mass = 5,
+  //   radius = 1;
+  // boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+  // boxBody = new CANNON.Body({
+  //   mass: mass
+  // });
+
+  // boxBody.addShape(boxShape);
+  // boxBody.position.set(x, y, z);
+  // world.add(boxBody);
+  // cubeMesh.body = boxBody;
+
+  // objects.push(cubeMesh);
 }
