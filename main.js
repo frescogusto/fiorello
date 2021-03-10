@@ -5,7 +5,7 @@ var world, mass, body, shape, timeStep = 1 / 60,
 var objects = [];
 var N = 0;
 
-var modelUrl = '3d/Scena.gltf'
+var modelUrl = '3d/TestScene.gltf'
 
 initThree();
 initCannon();
@@ -72,7 +72,7 @@ function initThree() {
 
   document.body.appendChild(renderer.domElement);
 
-  controls = new THREE.OrbitControls( camera, renderer.domElement );
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
 }
 
 function animate() {
@@ -153,19 +153,92 @@ manager.onError = function(url) {
 
 const loader = new THREE.GLTFLoader(manager);
 loader.load(modelUrl, function(gltf) {
-  //console.log(gltf);
-  //addScene(gltf.scene);
-  scene.add(gltf.scene);
+  console.log(gltf);
+  AddScene(gltf.scene);
+  // scene.add(gltf.scene);
 });
 
 
 
-function addScene(_scene) {
+function AddScene(_scene) {
   _scene.traverse(function (child) {
     if (child.isMesh) {
-      scene.add(child.clone());
-      console.log(_scene);
-      console.log("Added " + child.name);
+      let newObj = child.clone();
+      console.log(child);
+      AddPhysicalObj(newObj);
     }
   });
+}
+
+
+function AddPhysicalObj(_obj) {
+  console.log(_obj);
+
+  // Create mesh
+  let mesh = _obj;
+  let col = "#" + _obj.material.color.getHexString();
+  console.log(col);
+  let mat = new THREE.MeshPhongMaterial({
+    color: col
+  });
+  mesh.material = mat;
+  scene.add(mesh);
+
+  // Create cannon shape
+  let bb = mesh.geometry.boundingBox.max;
+
+  if (mesh.name.includes("Cube")) {
+    shape = new CANNON.Box(new CANNON.Vec3(bb.x, bb.y, bb.z));
+  }
+  else if (mesh.name.includes("Sphere")) {
+    shape = new CANNON.Sphere((bb.x + bb.y + bb.z) / 3);
+  }
+  else if (mesh.name.includes("Cylinder")) {
+    shape = new CANNON.Cylinder(bb.x, bb.x, bb.y * 2, 16);
+    let qt = new CANNON.Quaternion();
+    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+    let translation = new CANNON.Vec3(0,0,0);
+    shape.transformAllPoints(translation, qt);
+  }
+  else if (mesh.name.includes("Cone")) {
+    console.log(bb);
+    shape = new CANNON.Cylinder(0, bb.x, bb.y, 16);
+    let qt = new CANNON.Quaternion();
+    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+    let translation = new CANNON.Vec3(0,0,0);
+    shape.transformAllPoints(translation, qt);
+  }
+  else {
+    console.log("Cannot add physics to " + mesh.name);
+    return;
+  }
+
+
+
+  // Create cannon body
+  let mass;
+
+  console.log(mesh.userData.PhsxBehavior);
+  if (mesh.userData.PhsxBehavior < 0.5 || mesh.userData.PhsxBehavior == null) {
+    mass = 0;
+  } else if (mesh.userData.PhsxBehavior > 0.5) {
+    mass = 5;
+  }
+
+  body = new CANNON.Body({
+    mass: mass
+  });
+
+  body.addShape(shape);
+
+  body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+  let qt = new THREE.Quaternion();
+  qt.setFromEuler(new THREE.Euler(mesh.rotation.x, mesh.rotation.y, mesh.rotation.z));
+  body.quaternion.set(qt.x, qt.y, qt.z, qt.w);
+
+
+  world.add(body);
+  mesh.body = body;
+
+  objects.push(mesh);
 }
