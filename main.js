@@ -164,7 +164,6 @@ function AddScene(_scene) {
   _scene.traverse(function (child) {
     if (child.isMesh) {
       let newObj = child.clone();
-      console.log(child);
       AddPhysicalObj(newObj);
     }
   });
@@ -172,7 +171,6 @@ function AddScene(_scene) {
 
 
 function AddPhysicalObj(_obj) {
-  console.log(_obj);
 
   // Create mesh
   let mesh = _obj;
@@ -185,40 +183,12 @@ function AddPhysicalObj(_obj) {
   scene.add(mesh);
 
   // Create cannon shape
-  let bb = mesh.geometry.boundingBox.max;
-
-  if (mesh.name.includes("Cube")) {
-    shape = new CANNON.Box(new CANNON.Vec3(bb.x, bb.y, bb.z));
-  }
-  else if (mesh.name.includes("Sphere")) {
-    shape = new CANNON.Sphere((bb.x + bb.y + bb.z) / 3);
-  }
-  else if (mesh.name.includes("Cylinder")) {
-    shape = new CANNON.Cylinder(bb.x, bb.x, bb.y * 2, 16);
-    let qt = new CANNON.Quaternion();
-    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    let translation = new CANNON.Vec3(0,0,0);
-    shape.transformAllPoints(translation, qt);
-  }
-  else if (mesh.name.includes("Cone")) {
-    console.log(bb);
-    shape = new CANNON.Cylinder(0, bb.x, bb.y, 16);
-    let qt = new CANNON.Quaternion();
-    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    let translation = new CANNON.Vec3(0,0,0);
-    shape.transformAllPoints(translation, qt);
-  }
-  else {
-    console.log("Cannot add physics to " + mesh.name);
-    return;
-  }
-
-
+  console.log("Number of children: " + mesh.children.length);
+  shape = GetSimpleCollider(mesh);
+  if (shape == null) return;
 
   // Create cannon body
   let mass;
-
-  console.log(mesh.userData.PhsxBehavior);
   if (mesh.userData.PhsxBehavior < 0.5 || mesh.userData.PhsxBehavior == null) {
     mass = 0;
   } else if (mesh.userData.PhsxBehavior > 0.5) {
@@ -241,4 +211,39 @@ function AddPhysicalObj(_obj) {
   mesh.body = body;
 
   objects.push(mesh);
+}
+
+
+
+function GetSimpleCollider(_mesh) {
+  let _shape;
+  let bb = _mesh.geometry.boundingBox.max;
+
+  if (_mesh.name.includes("Cube")) {
+    _shape = new CANNON.Box(new CANNON.Vec3(bb.x, bb.y, bb.z));
+  }
+  else if (_mesh.name.includes("Sphere")) {
+    _shape = new CANNON.Sphere((bb.x + bb.y + bb.z) / 3);
+  }
+  else if (_mesh.name.includes("Cylinder")) {
+    _shape = new CANNON.Cylinder(bb.x, bb.x, bb.y * 2, 16);
+    let qt = new CANNON.Quaternion();
+    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+    let translation = new CANNON.Vec3(0,0,0);
+    _shape.transformAllPoints(translation, qt);
+  }
+  else if (_mesh.name.includes("Cone")) {
+    console.log(bb);
+    _shape = new CANNON.Cylinder(0, bb.x, bb.y, 16);
+    let qt = new CANNON.Quaternion();
+    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+    let translation = new CANNON.Vec3(0,0,0);
+    _shape.transformAllPoints(translation, qt);
+  }
+  else {
+    console.log("Cannot add physics to " + _mesh.name);
+    return;
+  }
+
+  return _shape;
 }
