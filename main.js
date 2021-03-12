@@ -1,5 +1,6 @@
 var world, mass, body, shape, timeStep = 1 / 60,
   camera, scene, renderer, geometry, material, mesh, controls;
+var cannonDebugRenderer;
 
 // To be synced
 var objects = [];
@@ -31,6 +32,7 @@ function initCannon() {
   //   addObject(index)
   // }
 
+  cannonDebugRenderer = new THREE.CannonDebugRenderer( scene, world );
 }
 
 function initThree() {
@@ -82,6 +84,7 @@ function animate() {
   updatePhysics();
   render();
 
+  cannonDebugRenderer.update();
 }
 
 function updatePhysics() {
@@ -92,6 +95,9 @@ function updatePhysics() {
   for (let i = 0; i !== objects.length; i++) {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
+    if (objects[i].name == "Compound") {
+      console.log(objects[i].children[0].position);
+    }
   }
 
   // Copy coordinates from Cannon.js to Three.js
@@ -162,20 +168,18 @@ loader.load(modelUrl, function(gltf) {
 
 function AddScene(_scene) {
   _scene.traverse(function (child) {
-    if (child.isMesh) {
-      let newObj = child.clone();
-      AddPhysicalObj(newObj);
-    }
+    let newObj = child.clone();
+    if (child.isMesh) {AddPhysicalObj(newObj)}
+    else if (child.name == "Empty" && child.children.length > 0) {AddPhysicalGroup(newObj)}
   });
 }
 
 
 function AddPhysicalObj(_obj) {
+  let mesh = _obj;
 
   // Create mesh
-  let mesh = _obj;
   let col = "#" + _obj.material.color.getHexString();
-  console.log(col);
   let mat = new THREE.MeshPhongMaterial({
     color: col
   });
@@ -183,8 +187,7 @@ function AddPhysicalObj(_obj) {
   scene.add(mesh);
 
   // Create cannon shape
-  console.log("Number of children: " + mesh.children.length);
-  shape = GetSimpleCollider(mesh);
+  shape = GetCollider(mesh);
   if (shape == null) return;
 
   // Create cannon body
@@ -215,7 +218,69 @@ function AddPhysicalObj(_obj) {
 
 
 
-function GetSimpleCollider(_mesh) {
+function AddPhysicalGroup(_obj) {
+  console.log("Add group");
+  let col, mat, childMesh, childShape, mass;
+  let allMeshes = [];
+  let nChildren = _obj.children.length;
+
+  // Create Body// Create body
+  if (_obj.userData.PhsxBehavior < 0.5 || _obj.userData.PhsxBehavior == null) {
+    mass = 0;
+  } else if (_obj.userData.PhsxBehavior > 0.5) {
+    mass = 5 * nChildren;
+  }
+  body = new CANNON.Body({
+    mass: mass
+  });
+  console.log(body.mass);
+
+  // Compute children
+  for (let i = 0; i < nChildren; i++) {
+    childMesh = _obj.children[i].clone();
+    _obj.remove(_obj.children[i]);
+
+    // Create mesh
+    col = "#" + childMesh.material.color.getHexString();
+    mat = new THREE.MeshPhongMaterial({
+      color: col
+    });
+    childMesh.material = mat;
+    allMeshes.push(childMesh);
+
+    // Create shape
+    childShape = GetCollider(childMesh);
+    if (childShape == null) return;
+    body.addShape(childShape, new CANNON.Vec3(childMesh.position.x, childMesh.position.y, childMesh.position.z));
+  }
+
+  // Create group
+  let group = new THREE.Group();
+  console.log(_obj.position);
+  group.position.set(_obj.position.x, _obj.position.y, _obj.position.z);
+  console.log(group.position);
+  for (let i = 0; i < nChildren; i++) {
+    group.add(allMeshes[i]);
+  }
+
+  // Adjust body position
+  body.position.set(group.position.x, group.position.y, group.position.z);
+  let qt = new THREE.Quaternion();
+  qt.setFromEuler(new THREE.Euler(group.rotation.x, group.rotation.y, group.rotation.z));
+  body.quaternion.set(qt.x, qt.y, qt.z, qt.w);
+
+  world.add(body);
+  group.body = body;
+
+  group.name = "Compound";
+  scene.add(group);
+
+  objects.push(group);
+}
+
+
+
+function GetCollider(_mesh) {
   let _shape;
   let bb = _mesh.geometry.boundingBox.max;
 
@@ -233,7 +298,6 @@ function GetSimpleCollider(_mesh) {
     _shape.transformAllPoints(translation, qt);
   }
   else if (_mesh.name.includes("Cone")) {
-    console.log(bb);
     _shape = new CANNON.Cylinder(0, bb.x, bb.y, 16);
     let qt = new CANNON.Quaternion();
     qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
