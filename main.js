@@ -6,7 +6,7 @@ var cannonDebugRenderer;
 var objects = [];
 var N = 0;
 
-var modelUrl = '3d/TestScene.gltf'
+var modelUrl = '3d/StanzadiprovaParent.gltf'
 
 initThree();
 initCannon();
@@ -26,7 +26,7 @@ function initCannon() {
   });
   groundBody.addShape(groundShape);
   groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-  //world.add(groundBody);
+  world.add(groundBody);
 
   // for (let index = 0; index < 10; index++) {
   //   addObject(index)
@@ -167,7 +167,7 @@ function AddScene(_scene) {
   _scene.traverse(function (child) {
     let newObj = child.clone();
     if (child.isMesh) {AddPhysicalObj(newObj)}
-    else if (child.name == "Empty" && child.children.length > 0) {AddPhysicalGroup(child)}
+    else if (child.name.includes("Empty") && child.children.length > 0) {AddPhysicalGroup(child)}
   });
 }
 
