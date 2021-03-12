@@ -151,24 +151,27 @@ function LoadObjects(_allObjects, _addToScene) {
   // Create prefabs and populate scene (optional)
   for (let i = 0; i < _allObjects.length; i++) {
     let newObj = _allObjects[i].clone();
-    if (GetCollider(newObj) != null || newObj.name.includes("Empty")) prefabs.push(newObj.clone());
+
+    // Se l'oggetto è una forma primitiva o un empty ed è dinamico aggiungi ai prefab
+    if (GetCollider(newObj) != null || newObj.name.includes("Empty")) {
+      if (newObj.userData.PhsxBehavior == 1) prefabs.push(newObj.clone());
+    }
     if (_addToScene) Instantiate(newObj);
   }
-
-  console.log(prefabs);
 }
 
 
 
 function CreatePhysicalObj(_obj) {
-
   let mesh = _obj;
 
   // Create cannon body
   let mass;
   if (mesh.userData.PhsxBehavior == 0 || mesh.userData.PhsxBehavior == null) mass = 0;
   else if (mesh.userData.PhsxBehavior == 1) mass = 5;
-  body = new CANNON.Body({ mass: mass });
+  body = new CANNON.Body({
+    mass: mass
+  });
   body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
   body.quaternion.set(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w);
 
@@ -185,11 +188,9 @@ function CreatePhysicalObj(_obj) {
   mesh.material = mat;
   scene.add(mesh);
 
-  // Add to scene & world
-  world.add(body);
+  // Output mesh with body
   mesh.body = body;
-  scene.add(mesh);
-  objects.push(mesh);
+  return mesh;
 }
 
 
@@ -203,7 +204,9 @@ function CreatePhysicalGroup(_obj) {
   let mass;
   if (_obj.userData.PhsxBehavior == 0 || _obj.userData.PhsxBehavior == null) mass = 0;
   else if (_obj.userData.PhsxBehavior == 1) mass = 5 * nChildren;
-  body = new CANNON.Body({ mass: mass });
+  body = new CANNON.Body({
+    mass: mass
+  });
 
   // Create cannon shapes
   for (let i = 0; i < nChildren; i++) {
@@ -235,10 +238,8 @@ function CreatePhysicalGroup(_obj) {
   body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
 
   // Add to world
-  world.add(body);
   group.body = body;
-  scene.add(group);
-  objects.push(group);
+  return group;
 }
 
 
@@ -276,20 +277,42 @@ function GetCollider(_mesh) {
 
 
 function Instantiate(newObj) {
+  let phsxObj = null;
 
   if (newObj.isMesh) {
-    CreatePhysicalObj(newObj);
+    phsxObj = CreatePhysicalObj(newObj);
   } else if (newObj.name.includes("Empty") && newObj.children.length > 0) {
-    CreatePhysicalGroup(newObj);
+    phsxObj = CreatePhysicalGroup(newObj);
   }
+
+  if (phsxObj == null) return;
+
+  world.add(phsxObj.body);
+  scene.add(phsxObj);
+  objects.push(phsxObj);
+
+  return phsxObj;
 }
 
 
 
-function SpawnObj() {
+function SpawnObj(x, y = 5, z) {
 
   let index = Math.floor(Math.random() * prefabs.length);
-  Instantiate(prefabs[index].clone());
+  let spawned = Instantiate(prefabs[index].clone());
+
+  spawned.body.position = new CANNON.Vec3(x, y, z);
+
+  var vec = new THREE.Vector3(); // create once and reuse
+  var pos = new THREE.Vector3(); // create once and reuse
+  vec.set(mouse.x, mouse.y, 0.5);
+  vec.unproject(camera);
+  vec.sub(camera.position).normalize();
+
+  // var distance = -camera.position.z / vec.z;
+  //
+  // pos.copy(camera.position).add(vec.multiplyScalar(distance));
+
 }
 
 
