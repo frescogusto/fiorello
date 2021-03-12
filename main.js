@@ -26,7 +26,7 @@ function initCannon() {
   });
   groundBody.addShape(groundShape);
   groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-  world.add(groundBody);
+  //world.add(groundBody);
 
   // for (let index = 0; index < 10; index++) {
   //   addObject(index)
@@ -95,9 +95,6 @@ function updatePhysics() {
   for (let i = 0; i !== objects.length; i++) {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
-    if (objects[i].name == "Compound") {
-      console.log(objects[i].children[0].position);
-    }
   }
 
   // Copy coordinates from Cannon.js to Three.js
@@ -170,7 +167,7 @@ function AddScene(_scene) {
   _scene.traverse(function (child) {
     let newObj = child.clone();
     if (child.isMesh) {AddPhysicalObj(newObj)}
-    else if (child.name == "Empty" && child.children.length > 0) {AddPhysicalGroup(newObj)}
+    else if (child.name == "Empty" && child.children.length > 0) {AddPhysicalGroup(child)}
   });
 }
 
@@ -237,21 +234,20 @@ function AddPhysicalGroup(_obj) {
 
   // Compute children
   for (let i = 0; i < nChildren; i++) {
-    childMesh = _obj.children[i].clone();
-    _obj.remove(_obj.children[i]);
+    //childMesh = _obj.children[i].clone();
 
     // Create mesh
-    col = "#" + childMesh.material.color.getHexString();
+    col = "#" + _obj.children[i].material.color.getHexString();
     mat = new THREE.MeshPhongMaterial({
       color: col
     });
-    childMesh.material = mat;
-    allMeshes.push(childMesh);
+    _obj.children[i].material = mat;
+    allMeshes.push(_obj.children[i].clone());
 
     // Create shape
-    childShape = GetCollider(childMesh);
+    childShape = GetCollider(_obj.children[i]);
     if (childShape == null) return;
-    body.addShape(childShape, new CANNON.Vec3(childMesh.position.x, childMesh.position.y, childMesh.position.z));
+    body.addShape(childShape, new CANNON.Vec3(_obj.children[i].position.x, _obj.children[i].position.y, _obj.children[i].position.z));
   }
 
   // Create group
@@ -260,7 +256,8 @@ function AddPhysicalGroup(_obj) {
   group.position.set(_obj.position.x, _obj.position.y, _obj.position.z);
   console.log(group.position);
   for (let i = 0; i < nChildren; i++) {
-    group.add(allMeshes[i]);
+    //group.add(allMeshes[i]);
+    group.add(_obj.children[0]);
   }
 
   // Adjust body position
@@ -291,14 +288,14 @@ function GetCollider(_mesh) {
     _shape = new CANNON.Sphere((bb.x + bb.y + bb.z) / 3);
   }
   else if (_mesh.name.includes("Cylinder")) {
-    _shape = new CANNON.Cylinder(bb.x, bb.x, bb.y * 2, 16);
+    _shape = new CANNON.Cylinder(bb.x, bb.x, bb.y * 2, 12);
     let qt = new CANNON.Quaternion();
     qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
     let translation = new CANNON.Vec3(0,0,0);
     _shape.transformAllPoints(translation, qt);
   }
   else if (_mesh.name.includes("Cone")) {
-    _shape = new CANNON.Cylinder(0, bb.x, bb.y, 16);
+    _shape = new CANNON.Cylinder(0, bb.x / 2, bb.y, 12);
     let qt = new CANNON.Quaternion();
     qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
     let translation = new CANNON.Vec3(0,0,0);
