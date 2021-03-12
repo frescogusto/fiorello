@@ -6,8 +6,9 @@ var objects = [];
 var prefabs = [];
 var N = 0;
 
-// Modello 3D
-var modelUrl = '3d/TestScene.gltf'
+// SETTINGS
+var modelUrl = '3d/stanzaconfisica.gltf'
+var debugMode = false;
 
 
 
@@ -29,38 +30,52 @@ loader.load(modelUrl, function(gltf) {
 function initThree() {
 
   scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xdfebf5);
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
   camera.position.z = 8;
   camera.position.y = 3;
   scene.add(camera);
 
-  // floor
-  geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
-  //geometry.applyMatrix( new THREE.Matrix4().makeRotationX( -Math.PI / 2 ) );
-  material = new THREE.MeshLambertMaterial({
-    color: 0x777777
-  });
-  material2 = new THREE.MeshLambertMaterial({
-    color: 0xff0000
-  });
-  //THREE.ColorUtils.adjustHSV( material.color, 0, 0, 0.9 );
-  mesh = new THREE.Mesh(geometry, material);
-  mesh.castShadow = true;
-  mesh.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
-  mesh.receiveShadow = true;
-  scene.add(mesh);
+  // // floor
+  // geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
+  // //geometry.applyMatrix( new THREE.Matrix4().makeRotationX( -Math.PI / 2 ) );
+  // material = new THREE.MeshLambertMaterial({
+  //   color: 0x777777
+  // });
+  // material2 = new THREE.MeshLambertMaterial({
+  //   color: 0xff0000
+  // });
+  // //THREE.ColorUtils.adjustHSV( material.color, 0, 0, 0.9 );
+  // mesh = new THREE.Mesh(geometry, material);
+  // mesh.castShadow = true;
+  // mesh.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+  // mesh.receiveShadow = true;
+  // scene.add(mesh);
 
-  // lights
-  var light, materials;
-  scene.add(new THREE.AmbientLight(0x666666));
+  // LIGHTS
+  const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.8 );
+  hemiLight.position.set(0, 100, 0);
+	scene.add( hemiLight );
 
-  light = new THREE.DirectionalLight(0xffffff, 1.75);
-  var d = 20;
-  light.position.set(d, d, d);
-  scene.add(light);
+  // scene.fog = new THREE.Fog( 0xffffff, 10, 100 );
+
+  const light = new THREE.DirectionalLight( 0xffffff, 0.5, 10);
+  light.position.set(1, 7, 4); //default; light shining from top
+  //light.shadow.radius = 0.1;
+  light.castShadow = true; // default false
+  light.shadow.bias = -0.00005;
+  scene.add( light );
+  //Set up shadow properties for the light
+  light.shadow.mapSize.width = 3048; // default
+  light.shadow.mapSize.height = 3048; // default
+  light.shadow.camera.near = 0.5; // default
+  light.shadow.camera.far = 500; // default
+
 
   renderer = new THREE.WebGLRenderer();
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   document.body.appendChild(renderer.domElement);
@@ -76,19 +91,19 @@ function initCannon() {
   // world.solver.iterations = 10;
 
   // Create a plane
-  var groundShape = new CANNON.Plane();
-  var groundBody = new CANNON.Body({
-    mass: 0
-  });
-  groundBody.addShape(groundShape);
-  groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-  world.add(groundBody);
+  // var groundShape = new CANNON.Plane();
+  // var groundBody = new CANNON.Body({
+  //   mass: 0
+  // });
+  // groundBody.addShape(groundShape);
+  // groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+  // world.add(groundBody);
 
   // for (let index = 0; index < 10; index++) {
   //   addObject(index)
   // }
 
-  cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+  if (debugMode) cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 }
 
 
@@ -121,7 +136,7 @@ function animate() {
   updatePhysics();
   render();
 
-  cannonDebugRenderer.update();
+  if (debugMode) cannonDebugRenderer.update();
 }
 
 
@@ -186,6 +201,8 @@ function CreatePhysicalObj(_obj) {
     color: col
   });
   mesh.material = mat;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
   scene.add(mesh);
 
   // Output mesh with body
@@ -230,6 +247,8 @@ function CreatePhysicalGroup(_obj) {
       color: col
     });
     _obj.children[i].material = mat;
+    _obj.children[i].castShadow = true;
+    _obj.children[i].receiveShadow = true;
     group.add(_obj.children[i].clone());
   }
 
