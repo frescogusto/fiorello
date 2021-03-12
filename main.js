@@ -1,39 +1,30 @@
 var world, mass, body, shape, timeStep = 1 / 60,
-  camera, scene, renderer, geometry, material, mesh, controls;
-var cannonDebugRenderer;
+  camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer;
 
 // To be synced
 var objects = [];
+var prefabs = [];
 var N = 0;
 
-var modelUrl = '3d/StanzadiprovaParent.gltf'
+// Modello 3D
+var modelUrl = '3d/TestScene.gltf'
+
+
+
 
 initThree();
 initCannon();
+initControls();
 animate();
 
-function initCannon() {
+const manager = new THREE.LoadingManager();
+const loader = new THREE.GLTFLoader(manager);
+loader.load(modelUrl, function(gltf) {
+  console.log(gltf);
+  LoadObjects(gltf.scene.children, true);
+});
 
-  world = new CANNON.World();
-  world.gravity.set(0, -10, 0);
-  world.broadphase = new CANNON.NaiveBroadphase();
-  // world.solver.iterations = 10;
 
-  // Create a plane
-  var groundShape = new CANNON.Plane();
-  var groundBody = new CANNON.Body({
-    mass: 0
-  });
-  groundBody.addShape(groundShape);
-  groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-  world.add(groundBody);
-
-  // for (let index = 0; index < 10; index++) {
-  //   addObject(index)
-  // }
-
-  cannonDebugRenderer = new THREE.CannonDebugRenderer( scene, world );
-}
 
 function initThree() {
 
@@ -73,19 +64,67 @@ function initThree() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   document.body.appendChild(renderer.domElement);
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
 }
+
+
+
+function initCannon() {
+
+  world = new CANNON.World();
+  world.gravity.set(0, -10, 0);
+  world.broadphase = new CANNON.NaiveBroadphase();
+  // world.solver.iterations = 10;
+
+  // Create a plane
+  var groundShape = new CANNON.Plane();
+  var groundBody = new CANNON.Body({
+    mass: 0
+  });
+  groundBody.addShape(groundShape);
+  groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+  world.add(groundBody);
+
+  // for (let index = 0; index < 10; index++) {
+  //   addObject(index)
+  // }
+
+  cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+}
+
+
+
+function initControls() {
+  mouse = new THREE.Vector2();
+  raycaster = new THREE.Raycaster();
+
+  // Click event
+  document.addEventListener(
+    "click",
+    event => {
+      mouse.x = event.clientX / window.innerWidth * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      Click();
+    },
+    false
+  );
+
+  // Orbit controls
+  orbit = new THREE.OrbitControls(camera, renderer.domElement);
+}
+
+
 
 function animate() {
 
   requestAnimationFrame(animate);
-  controls.update();
+  orbit.update();
   updatePhysics();
   render();
 
   cannonDebugRenderer.update();
 }
+
+
 
 function updatePhysics() {
 
@@ -96,84 +135,47 @@ function updatePhysics() {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
   }
-
-  // Copy coordinates from Cannon.js to Three.js
-  // mesh.position.copy(body.position);
-  // mesh.quaternion.copy(body.quaternion);
-
 }
 
-
-function addObject(i) {
-  var cubeGeo = new THREE.BoxGeometry(1, 1, 1, 10, 10);
-  var cubeMaterial = new THREE.MeshPhongMaterial({
-    color: 0x888888
-  });
-  cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-  scene.add(cubeMesh);
-
-  var mass = 5,
-    radius = 1;
-  boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
-  boxBody = new CANNON.Body({
-    mass: mass
-  });
-
-  boxBody.addShape(boxShape);
-  boxBody.position.set(i * 2, 5, 0);
-  world.add(boxBody);
-  cubeMesh.body = boxBody;
-
-  objects.push(cubeMesh);
-}
 
 
 function render() {
 
   renderer.render(scene, camera);
-
 }
 
 
-const manager = new THREE.LoadingManager();
-var loadedScene;
-manager.onStart = function(url, itemsLoaded, itemsTotal) {
-  console.log('Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
-};
 
-manager.onLoad = function() {
-  console.log('Loading complete!');
-};
+function LoadObjects(_allObjects, _addToScene) {
 
+  // Create prefabs and populate scene (optional)
+  for (let i = 0; i < _allObjects.length; i++) {
+    let newObj = _allObjects[i].clone();
+    if (GetCollider(newObj) != null || newObj.name.includes("Empty")) prefabs.push(newObj.clone());
+    if (_addToScene) Instantiate(newObj);
+  }
 
-manager.onProgress = function(url, itemsLoaded, itemsTotal) {
-  //console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
-};
-
-manager.onError = function(url) {
-  console.log('There was an error loading ' + url);
-};
-
-const loader = new THREE.GLTFLoader(manager);
-loader.load(modelUrl, function(gltf) {
-  console.log(gltf);
-  AddScene(gltf.scene);
-  // scene.add(gltf.scene);
-});
-
-
-
-function AddScene(_scene) {
-  _scene.traverse(function (child) {
-    let newObj = child.clone();
-    if (child.isMesh) {AddPhysicalObj(newObj)}
-    else if (child.name.includes("Empty") && child.children.length > 0) {AddPhysicalGroup(child)}
-  });
+  console.log(prefabs);
 }
 
 
-function AddPhysicalObj(_obj) {
+
+function CreatePhysicalObj(_obj) {
+
   let mesh = _obj;
+
+  // Create cannon body
+  let mass;
+  if (mesh.userData.PhsxBehavior == 0 || mesh.userData.PhsxBehavior == null) mass = 0;
+  else if (mesh.userData.PhsxBehavior == 1) mass = 5;
+  body = new CANNON.Body({ mass: mass });
+  body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+  body.quaternion.set(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w);
+
+  // Create cannon shape
+  shape = GetCollider(mesh);
+  if (shape == null) return;
+  body.addShape(shape);
 
   // Create mesh
   let col = "#" + _obj.material.color.getHexString();
@@ -183,68 +185,28 @@ function AddPhysicalObj(_obj) {
   mesh.material = mat;
   scene.add(mesh);
 
-  // Create cannon shape
-  shape = GetCollider(mesh);
-  if (shape == null) return;
-
-  // Create cannon body
-  let mass;
-  if (mesh.userData.PhsxBehavior < 0.5 || mesh.userData.PhsxBehavior == null) {
-    mass = 0;
-  } else if (mesh.userData.PhsxBehavior > 0.5) {
-    mass = 5;
-  }
-
-  body = new CANNON.Body({
-    mass: mass
-  });
-
-  body.addShape(shape);
-
-  body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
-  let qt = new THREE.Quaternion();
-  qt.setFromEuler(new THREE.Euler(mesh.rotation.x, mesh.rotation.y, mesh.rotation.z));
-  body.quaternion.set(qt.x, qt.y, qt.z, qt.w);
-
-
+  // Add to scene & world
   world.add(body);
   mesh.body = body;
-
+  scene.add(mesh);
   objects.push(mesh);
 }
 
 
 
-function AddPhysicalGroup(_obj) {
-  console.log("Add group");
-  let col, mat, childMesh, childShape, mass;
+function CreatePhysicalGroup(_obj) {
+  let col, mat, childShape;
   let allMeshes = [];
   let nChildren = _obj.children.length;
 
   // Create Body// Create body
-  if (_obj.userData.PhsxBehavior < 0.5 || _obj.userData.PhsxBehavior == null) {
-    mass = 0;
-  } else if (_obj.userData.PhsxBehavior > 0.5) {
-    mass = 5 * nChildren;
-  }
-  body = new CANNON.Body({
-    mass: mass
-  });
-  console.log(body.mass);
+  let mass;
+  if (_obj.userData.PhsxBehavior == 0 || _obj.userData.PhsxBehavior == null) mass = 0;
+  else if (_obj.userData.PhsxBehavior == 1) mass = 5 * nChildren;
+  body = new CANNON.Body({ mass: mass });
 
-  // Compute children
+  // Create cannon shapes
   for (let i = 0; i < nChildren; i++) {
-    //childMesh = _obj.children[i].clone();
-
-    // Create mesh
-    col = "#" + _obj.children[i].material.color.getHexString();
-    mat = new THREE.MeshPhongMaterial({
-      color: col
-    });
-    _obj.children[i].material = mat;
-    allMeshes.push(_obj.children[i].clone());
-
-    // Create shape
     childShape = GetCollider(_obj.children[i]);
     if (childShape == null) return;
     body.addShape(childShape,
@@ -255,25 +217,27 @@ function AddPhysicalGroup(_obj) {
 
   // Create group
   let group = new THREE.Group();
-  console.log(_obj.position);
   group.position.set(_obj.position.x, _obj.position.y, _obj.position.z);
   group.quaternion.set(_obj.quaternion.x, _obj.quaternion.y, _obj.quaternion.z, _obj.quaternion.w);
-  console.log(group.position);
+
+  // Create meshes
   for (let i = 0; i < nChildren; i++) {
-    //group.add(allMeshes[i]);
-    group.add(_obj.children[0]);
+    col = "#" + _obj.children[i].material.color.getHexString();
+    mat = new THREE.MeshPhongMaterial({
+      color: col
+    });
+    _obj.children[i].material = mat;
+    group.add(_obj.children[i].clone());
   }
 
   // Adjust body position
   body.position.set(group.position.x, group.position.y, group.position.z);
   body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
 
+  // Add to world
   world.add(body);
   group.body = body;
-
-  group.name = "Compound";
   scene.add(group);
-
   objects.push(group);
 }
 
@@ -281,32 +245,82 @@ function AddPhysicalGroup(_obj) {
 
 function GetCollider(_mesh) {
   let _shape;
+  if (!_mesh.isMesh) return null;
+
   let bb = _mesh.geometry.boundingBox.max;
 
   if (_mesh.name.includes("Cube")) {
     _shape = new CANNON.Box(new CANNON.Vec3(bb.x, bb.y, bb.z));
-  }
-  else if (_mesh.name.includes("Sphere")) {
+  } else if (_mesh.name.includes("Sphere")) {
     _shape = new CANNON.Sphere((bb.x + bb.y + bb.z) / 3);
-  }
-  else if (_mesh.name.includes("Cylinder")) {
+  } else if (_mesh.name.includes("Cylinder")) {
     _shape = new CANNON.Cylinder(bb.x, bb.x, bb.y * 2, 12);
     let qt = new CANNON.Quaternion();
-    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    let translation = new CANNON.Vec3(0,0,0);
+    qt.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    let translation = new CANNON.Vec3(0, 0, 0);
     _shape.transformAllPoints(translation, qt);
-  }
-  else if (_mesh.name.includes("Cone")) {
+  } else if (_mesh.name.includes("Cone")) {
     _shape = new CANNON.Cylinder(0, bb.x / 2, bb.y, 12);
     let qt = new CANNON.Quaternion();
-    qt.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    let translation = new CANNON.Vec3(0,0,0);
+    qt.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    let translation = new CANNON.Vec3(0, 0, 0);
     _shape.transformAllPoints(translation, qt);
-  }
-  else {
+  } else {
     console.log("Cannot add physics to " + _mesh.name);
-    return;
+    return null;
   }
 
   return _shape;
 }
+
+
+
+function Instantiate(newObj) {
+
+  if (newObj.isMesh) {
+    CreatePhysicalObj(newObj);
+  } else if (newObj.name.includes("Empty") && newObj.children.length > 0) {
+    CreatePhysicalGroup(newObj);
+  }
+}
+
+
+
+function SpawnObj() {
+
+  let index = Math.floor(Math.random() * prefabs.length);
+  Instantiate(prefabs[index].clone());
+}
+
+
+function Click() {
+
+  raycaster.setFromCamera(mouse, camera);
+  console.log(mouse);
+  SpawnObj();
+}
+
+
+
+// function addObject(i) {
+//   var cubeGeo = new THREE.BoxGeometry(1, 1, 1, 10, 10);
+//   var cubeMaterial = new THREE.MeshPhongMaterial({
+//     color: 0x888888
+//   });
+//   cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
+//   scene.add(cubeMesh);
+//
+//   var mass = 5,
+//     radius = 1;
+//   boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+//   boxBody = new CANNON.Body({
+//     mass: mass
+//   });
+//
+//   boxBody.addShape(boxShape);
+//   boxBody.position.set(i * 2, 5, 0);
+//   world.add(boxBody);
+//   cubeMesh.body = boxBody;
+//
+//   objects.push(cubeMesh);
+// }
