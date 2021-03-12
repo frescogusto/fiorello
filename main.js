@@ -247,13 +247,17 @@ function AddPhysicalGroup(_obj) {
     // Create shape
     childShape = GetCollider(_obj.children[i]);
     if (childShape == null) return;
-    body.addShape(childShape, new CANNON.Vec3(_obj.children[i].position.x, _obj.children[i].position.y, _obj.children[i].position.z));
+    body.addShape(childShape,
+      new CANNON.Vec3(_obj.children[i].position.x, _obj.children[i].position.y, _obj.children[i].position.z),
+      new CANNON.Quaternion(_obj.children[i].quaternion.x, _obj.children[i].quaternion.y, _obj.children[i].quaternion.z, _obj.children[i].quaternion.w)
+    );
   }
 
   // Create group
   let group = new THREE.Group();
   console.log(_obj.position);
   group.position.set(_obj.position.x, _obj.position.y, _obj.position.z);
+  group.quaternion.set(_obj.quaternion.x, _obj.quaternion.y, _obj.quaternion.z, _obj.quaternion.w);
   console.log(group.position);
   for (let i = 0; i < nChildren; i++) {
     //group.add(allMeshes[i]);
@@ -262,9 +266,7 @@ function AddPhysicalGroup(_obj) {
 
   // Adjust body position
   body.position.set(group.position.x, group.position.y, group.position.z);
-  let qt = new THREE.Quaternion();
-  qt.setFromEuler(new THREE.Euler(group.rotation.x, group.rotation.y, group.rotation.z));
-  body.quaternion.set(qt.x, qt.y, qt.z, qt.w);
+  body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
 
   world.add(body);
   group.body = body;
