@@ -4,13 +4,15 @@ var world, mass, body, shape, timeStep = 1 / 60,
 // To be synced
 var objects = [];
 var prefabs = [];
+var bodiesToRemove = [];
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/TestScene.gltf'
-const debugMode = false;
+const modelUrl = '3d/ExplosionTest.gltf'
+const debugMode = true;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
+const explosionVel = 5;
 
 
 
@@ -166,6 +168,11 @@ function updatePhysics() {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
   }
+
+  // Remove unused bodies
+  for (let i = 0; i < bodiesToRemove.length; i++) {
+    world.remove(bodiesToRemove[i]);
+  }
 }
 
 
@@ -210,7 +217,6 @@ function LoadObjects(_allObjects, _addToScene) {
 
 
 function CreatePhysicalObj(_obj) {
-  console.log(_obj.material.map);
   let mesh = _obj;
 
   // Create cannon body
@@ -294,10 +300,9 @@ function CreatePhysicalGroup(_obj) {
   // Account for collisions
   body.addEventListener("collide", function(e) {
     var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
-    if (Math.abs(relativeVelocity) > 5) {
+    if (Math.abs(relativeVelocity) > explosionVel) {
       console.log("Esplosione");
-    } else {
-      // Less energy
+      Explode(group);
     }
   });
 
@@ -347,6 +352,8 @@ function Instantiate(newObj) {
     phsxObj = CreatePhysicalObj(newObj);
   } else if (newObj.name.includes("Empty") && newObj.children.length > 0) {
     phsxObj = CreatePhysicalGroup(newObj);
+  } else {
+    console.log("No Phisics");
   }
 
   if (phsxObj == null) return;
@@ -354,6 +361,7 @@ function Instantiate(newObj) {
   world.add(phsxObj.body);
   scene.add(phsxObj);
   objects.push(phsxObj);
+  console.log(objects);
 
   return phsxObj;
 }
@@ -383,8 +391,30 @@ function SpawnObj(x, y = 5, z) {
 function Click() {
 
   raycaster.setFromCamera(mouse, camera);
-  console.log(mouse);
   SpawnObj();
+}
+
+
+
+function Explode(_group) {
+
+  Delete(_group);
+
+  for (let i = 0; i < _group.children.length; i++) {
+    _group.children[i].userData.PhsxBehavior = 1;
+    let newObj = Instantiate(_group.children[i]);
+  }
+}
+
+
+
+function Delete(item) {
+
+  bodiesToRemove.push(item.body);
+  scene.remove(item);
+  objects = objects.filter(function(e) {
+    return e !== item;
+  })
 }
 
 
