@@ -7,7 +7,7 @@ var prefabs = [];
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/stanzaconfisica.gltf'
+const modelUrl = '3d/TestScene.gltf'
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
@@ -79,6 +79,7 @@ function initThree() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
 
   document.body.appendChild(renderer.domElement);
 
@@ -209,6 +210,7 @@ function LoadObjects(_allObjects, _addToScene) {
 
 
 function CreatePhysicalObj(_obj) {
+  console.log(_obj.material.map);
   let mesh = _obj;
 
   // Create cannon body
@@ -231,6 +233,7 @@ function CreatePhysicalObj(_obj) {
   let mat = new THREE.MeshPhongMaterial({
     color: col
   });
+  if (mesh.material.map != null) mat.map = mesh.material.map;
   mesh.material = mat;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -277,6 +280,7 @@ function CreatePhysicalGroup(_obj) {
     mat = new THREE.MeshPhongMaterial({
       color: col
     });
+    if (_obj.children[i].material.map != null) mat.map = _obj.children[i].material.map;
     _obj.children[i].material = mat;
     _obj.children[i].castShadow = true;
     _obj.children[i].receiveShadow = true;
