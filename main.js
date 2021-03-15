@@ -82,6 +82,7 @@ function initThree() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.setPixelRatio( window.devicePixelRatio );
 
   document.body.appendChild(renderer.domElement);
 
@@ -252,7 +253,7 @@ function CreatePhysicalObj(_obj) {
 
 
 
-function CreatePhysicalGroup(_obj) {
+function CreatePhysicalGroup(_obj, canBreak = true) {
   let col, mat, childShape;
   let allMeshes = [];
   let nChildren = _obj.children.length;
@@ -267,12 +268,27 @@ function CreatePhysicalGroup(_obj) {
 
   // Create cannon shapes
   for (let i = 0; i < nChildren; i++) {
-    childShape = GetCollider(_obj.children[i]);
-    if (childShape == null) return;
-    body.addShape(childShape,
-      new CANNON.Vec3(_obj.children[i].position.x, _obj.children[i].position.y, _obj.children[i].position.z),
-      new CANNON.Quaternion(_obj.children[i].quaternion.x, _obj.children[i].quaternion.y, _obj.children[i].quaternion.z, _obj.children[i].quaternion.w)
-    );
+    let child = _obj.children[i];
+
+    if (child.children.length == 0) {
+      childShape = GetCollider(child);
+      if (childShape == null) return;
+      body.addShape(childShape,
+        new CANNON.Vec3(child.position.x, child.position.y, child.position.z),
+        new CANNON.Quaternion(child.quaternion.x, child.quaternion.y, child.quaternion.z, child.quaternion.w)
+      );
+    } else {
+      for (let j = 0; j < child.children.length; j++) {
+        let grandchild = child.children[j];
+
+        childShape = GetCollider(grandchild);
+        if (childShape == null) return;
+        body.addShape(childShape,
+          new CANNON.Vec3(grandchild.position.x + child.position.x, grandchild.position.y + child.position.y, grandchild.position.z + child.position.z),
+          new CANNON.Quaternion(grandchild.quaternion.x + child.quaternion.x, grandchild.quaternion.y + child.quaternion.y, grandchild.quaternion.z + child.quaternion.z, grandchild.quaternion.w)
+        );
+      }
+    }
   }
 
   // Create group
@@ -282,15 +298,40 @@ function CreatePhysicalGroup(_obj) {
 
   // Create meshes
   for (let i = 0; i < nChildren; i++) {
-    col = "#" + _obj.children[i].material.color.getHexString();
-    mat = new THREE.MeshPhongMaterial({
-      color: col
-    });
-    if (_obj.children[i].material.map != null) mat.map = _obj.children[i].material.map;
-    _obj.children[i].material = mat;
-    _obj.children[i].castShadow = true;
-    _obj.children[i].receiveShadow = true;
-    group.add(_obj.children[i].clone());
+    let child = _obj.children[i];
+
+    if (child.children.length == 0) {
+      col = "#" + child.material.color.getHexString();
+      mat = new THREE.MeshPhongMaterial({
+        color: col
+      });
+      if (child.material.map != null) mat.map = child.material.map;
+      child.material = mat;
+      child.castShadow = true;
+      child.receiveShadow = true;
+      group.add(child.clone());
+    } else {
+      let subGroup = new THREE.Group();
+      for (let j = 0; j < child.children.length; j++) {
+        let grandchild = _obj.children[i].children[j];
+
+        col = "#" + grandchild.material.color.getHexString();
+        mat = new THREE.MeshPhongMaterial({
+          color: col
+        });
+        if (grandchild.material.map != null) mat.map = grandchild.material.map;
+        grandchild.material = mat;
+        grandchild.castShadow = true;
+        grandchild.receiveShadow = true;
+        grandchild.position.x += child.position.x;
+        grandchild.position.y += child.position.y;
+        grandchild.position.z += child.position.z;
+        // DOVREBBE ESSERE SUBGROUP MANNAGGIA LA MISERIA
+        group.add(grandchild.clone());
+      }
+      subGroup.name = "SubEmpty";
+      group.add(subGroup);
+    }
   }
 
   // Adjust body position
@@ -298,16 +339,19 @@ function CreatePhysicalGroup(_obj) {
   body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
 
   // Account for collisions
-  body.addEventListener("collide", function(e) {
-    var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
-    if (Math.abs(relativeVelocity) > explosionVel) {
-      console.log("Esplosione");
-      Explode(group);
-    }
-  });
+  if (canBreak) {
+    body.addEventListener("collide", function(e) {
+      var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
+      if (Math.abs(relativeVelocity) > explosionVel) {
+        console.log("Esplosione");
+        Explode(group);
+      }
+    });
+  }
 
   // Add to world
   group.body = body;
+  group.name = "Empty";
   return group;
 }
 
@@ -345,13 +389,15 @@ function GetCollider(_mesh) {
 
 
 
-function Instantiate(newObj) {
+function Instantiate(newObj, canBreak) {
   let phsxObj = null;
 
   if (newObj.isMesh) {
     phsxObj = CreatePhysicalObj(newObj);
+    console.log("New obj");
   } else if (newObj.name.includes("Empty") && newObj.children.length > 0) {
-    phsxObj = CreatePhysicalGroup(newObj);
+    phsxObj = CreatePhysicalGroup(newObj, canBreak);
+    console.log("New group");
   } else {
     console.log("No Phisics");
   }
@@ -361,6 +407,7 @@ function Instantiate(newObj) {
   world.add(phsxObj.body);
   scene.add(phsxObj);
   objects.push(phsxObj);
+
   console.log(objects);
 
   return phsxObj;
@@ -397,14 +444,13 @@ function Click() {
 
 
 function Explode(_group) {
-
   let nSubItems = _group.children.length;
   for (let i = 0; i < nSubItems; i++) {
     let child = _group.children[0];
     scene.attach(child);
     child.userData.PhsxBehavior = 1;
 
-    let newObj = Instantiate(child);
+    let newObj = Instantiate(child, false);
   }
 
   Delete(_group);
