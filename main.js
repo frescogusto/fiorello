@@ -1,5 +1,5 @@
 var world, mass, body, shape, timeStep = 1 / 60,
-  camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer;
+  camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock;
 
 // To be synced
 var objects = [];
@@ -7,8 +7,10 @@ var prefabs = [];
 var N = 0;
 
 // SETTINGS
-var modelUrl = '3d/stanzaconfisica.gltf'
-var debugMode = false;
+const modelUrl = '3d/stanzaconfisica.gltf'
+const debugMode = false;
+const camTarget = new THREE.Vector3(0, 1.2, 0);
+const camDist = 5.3;
 
 
 
@@ -33,8 +35,8 @@ function initThree() {
   scene.background = new THREE.Color(0xdfebf5);
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
-  camera.position.z = 8;
-  camera.position.y = 3;
+  // camera.position.z = 8;
+  // camera.position.y = 3;
   scene.add(camera);
 
   // // floor
@@ -54,18 +56,18 @@ function initThree() {
   // scene.add(mesh);
 
   // LIGHTS
-  const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.8 );
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.8);
   hemiLight.position.set(0, 100, 0);
-	scene.add( hemiLight );
+  scene.add(hemiLight);
 
   // scene.fog = new THREE.Fog( 0xffffff, 10, 100 );
 
-  const light = new THREE.DirectionalLight( 0xffffff, 0.5, 10);
+  const light = new THREE.DirectionalLight(0xffffff, 0.5, 10);
   light.position.set(1, 7, 4); //default; light shining from top
   //light.shadow.radius = 0.1;
   light.castShadow = true; // default false
   light.shadow.bias = -0.00005;
-  scene.add( light );
+  scene.add(light);
   //Set up shadow properties for the light
   light.shadow.mapSize.width = 3048; // default
   light.shadow.mapSize.height = 3048; // default
@@ -79,6 +81,8 @@ function initThree() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   document.body.appendChild(renderer.domElement);
+
+  clock = new THREE.Clock();
 }
 
 
@@ -111,20 +115,30 @@ function initCannon() {
 function initControls() {
   mouse = new THREE.Vector2();
   raycaster = new THREE.Raycaster();
+  camAngle = 0;
+  camH = 0;
+
+  // Move event
+  document.addEventListener(
+    "mousemove",
+    event => {
+      mouse.x = event.clientX / window.innerWidth * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    },
+    false
+  );
 
   // Click event
   document.addEventListener(
     "click",
     event => {
-      mouse.x = event.clientX / window.innerWidth * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       Click();
     },
     false
   );
 
   // Orbit controls
-  orbit = new THREE.OrbitControls(camera, renderer.domElement);
+  //orbit = new THREE.OrbitControls(camera, renderer.domElement);
 }
 
 
@@ -132,8 +146,9 @@ function initControls() {
 function animate() {
 
   requestAnimationFrame(animate);
-  orbit.update();
+  //orbit.update();
   updatePhysics();
+  updateCam();
   render();
 
   if (debugMode) cannonDebugRenderer.update();
@@ -150,6 +165,22 @@ function updatePhysics() {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
   }
+}
+
+
+
+function updateCam() {
+  let delta = clock.getDelta();
+  camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * 0.5, 0.9, delta);
+  camH = THREE.MathUtils.damp(camH, mouse.y * 0.8, 0.995, delta)
+  let targetPos = new THREE.Vector3();
+
+  targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
+  targetPos.y = camTarget.y + camH;
+  targetPos.z = camTarget.z + camDist * Math.sin(camAngle);
+
+  camera.position.set(targetPos.x, targetPos.y, targetPos.z);
+  camera.lookAt(camTarget);
 }
 
 
@@ -255,6 +286,16 @@ function CreatePhysicalGroup(_obj) {
   // Adjust body position
   body.position.set(group.position.x, group.position.y, group.position.z);
   body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
+
+  // Account for collisions
+  body.addEventListener("collide", function(e) {
+    var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
+    if (Math.abs(relativeVelocity) > 5) {
+      console.log("Esplosione");
+    } else {
+      // Less energy
+    }
+  });
 
   // Add to world
   group.body = body;
