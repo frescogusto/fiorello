@@ -8,11 +8,13 @@ var bodiesToRemove = [];
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/ExplosionTest.gltf'
+const modelUrl = '3d/stanzaconfisica.gltf'
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
 const explosionVel = 5;
+const horMovement = 1.5;
+const verMovement = 0.8;
 
 
 
@@ -181,8 +183,8 @@ function updatePhysics() {
 
 function updateCam() {
   let delta = clock.getDelta();
-  camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * 0.5, 0.9, delta);
-  camH = THREE.MathUtils.damp(camH, mouse.y * 0.8, 0.995, delta)
+  camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
+  camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta)
   let targetPos = new THREE.Vector3();
 
   targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
@@ -443,6 +445,8 @@ function Click() {
 
 
 function Explode(_group) {
+  let velocity = _group.body.velocity;
+
   let nSubItems = _group.children.length;
   for (let i = 0; i < nSubItems; i++) {
     let child = _group.children[0];
@@ -450,6 +454,9 @@ function Explode(_group) {
     child.userData.PhsxBehavior = 1;
 
     let newObj = Instantiate(child, false);
+    newObj.body.velocity = new CANNON.Vec3(-0.5 * velocity.x, -0.5 * velocity.y, -0.5 * velocity.z);
+    // newObj.body.velocity = velocity;  PER FARLO IMPAZZIRE
+
     scene.remove(child);
   }
 
