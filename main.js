@@ -174,6 +174,7 @@ function updatePhysics() {
   for (let i = 0; i < bodiesToRemove.length; i++) {
     world.remove(bodiesToRemove[i]);
   }
+  bodiesToRemove = [];
 }
 
 
@@ -218,7 +219,7 @@ function LoadObjects(_allObjects, _addToScene) {
 
 
 function CreatePhysicalObj(_obj) {
-  let mesh = _obj;
+  let mesh = _obj.clone();
 
   // Create cannon body
   let mass;
@@ -327,7 +328,7 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
         grandchild.position.y += child.position.y;
         grandchild.position.z += child.position.z;
         // DOVREBBE ESSERE SUBGROUP MANNAGGIA LA MISERIA
-        group.add(grandchild.clone());
+        subGroup.add(grandchild.clone());
       }
       subGroup.name = "SubEmpty";
       group.add(subGroup);
@@ -408,8 +409,6 @@ function Instantiate(newObj, canBreak) {
   scene.add(phsxObj);
   objects.push(phsxObj);
 
-  console.log(objects);
-
   return phsxObj;
 }
 
@@ -451,6 +450,7 @@ function Explode(_group) {
     child.userData.PhsxBehavior = 1;
 
     let newObj = Instantiate(child, false);
+    scene.remove(child);
   }
 
   Delete(_group);
@@ -460,7 +460,7 @@ function Explode(_group) {
 
 function Delete(item) {
 
-  bodiesToRemove.push(item.body);
+  if (item.body != null) bodiesToRemove.push(item.body);
   scene.remove(item);
   objects = objects.filter(function(e) {
     return e !== item;
