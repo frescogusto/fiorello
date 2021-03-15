@@ -9,7 +9,7 @@ var N = 0;
 
 // SETTINGS
 const modelUrl = '3d/ExplosionTest.gltf'
-const debugMode = true;
+const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
 const explosionVel = 5;
@@ -398,12 +398,16 @@ function Click() {
 
 function Explode(_group) {
 
-  Delete(_group);
+  let nSubItems = _group.children.length;
+  for (let i = 0; i < nSubItems; i++) {
+    let child = _group.children[0];
+    scene.attach(child);
+    child.userData.PhsxBehavior = 1;
 
-  for (let i = 0; i < _group.children.length; i++) {
-    _group.children[i].userData.PhsxBehavior = 1;
-    let newObj = Instantiate(_group.children[i]);
+    let newObj = Instantiate(child);
   }
+
+  Delete(_group);
 }
 
 
