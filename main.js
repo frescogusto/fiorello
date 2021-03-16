@@ -446,6 +446,7 @@ function Click() {
 
 function Explode(_group) {
   let velocity = _group.body.velocity;
+  let pos = _group.body.position;
 
   let nSubItems = _group.children.length;
   for (let i = 0; i < nSubItems; i++) {
@@ -454,8 +455,13 @@ function Explode(_group) {
     child.userData.PhsxBehavior = 1;
 
     let newObj = Instantiate(child, false);
-    newObj.body.velocity = new CANNON.Vec3(-0.5 * velocity.x, -0.5 * velocity.y, -0.5 * velocity.z);
-    // newObj.body.velocity = velocity;  PER FARLO IMPAZZIRE
+
+    //newObj.body.velocity = new CANNON.Vec3(-0.5 * velocity.x, -0.5 * velocity.y, -0.5 * velocity.z); // REALISTICO
+    // newObj.body.velocity = velocity;  //PER FARLO IMPAZZIRE
+    let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
+    let centerVel = pos.vsub(newPos).mult(15);
+    let oppositeVel = velocity.mult(-0.3);
+    newObj.body.velocity = centerVel.vadd(oppositeVel);
 
     scene.remove(child);
   }
