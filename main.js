@@ -15,13 +15,13 @@ var N = 0;
 // SETTINGS
 const modelUrl = '3d/STANZA 2.gltf'
 const debugMode = false;
-const camTarget = new THREE.Vector3(0, 1.2, 0);
-const camDist = 5.3;
+const camTarget = new THREE.Vector3(0, 0.8, 0);
+const camDist = 4.3;
 const explosionVel = 5;
 const horMovement = 0.3;
 const verMovement = 0.5;
 const antiAliasing = true;
-const nMinBodies = 20;
+const nMinBodies = 15;
 const nMaxBodies = 50;
 
 
@@ -565,10 +565,7 @@ function Click() {
   const intersect = raycaster.intersectObjects(objects, true)[0];
   if (intersect == null) return;
 
-  console.log(camera.position);
-  console.log(intersect.point);
-  let direction = new CANNON.Vec3(camera.x - intersect.point.x, camera.y - intersect.point.y, camera.z - intersect.point.z);
-  // direction.mult(1000);
+  let direction = new CANNON.Vec3(intersect.point.x - camera.position.x, intersect.point.y - camera.position.y, intersect.point.z - camera.position.z);
 
   if (intersect.object.parent == scene) {
     Explode(intersect.object, direction);
@@ -582,7 +579,12 @@ function Click() {
 
 
 function Explode(_group, _raycastVel = new CANNON.Vec3(0, 0, 0)) {
-  if (!_group.body.breakable) return;
+  if (!_group.body.breakable) {
+    _raycastVel.mult(3);
+    _raycastVel.y = 4;
+    _group.body.velocity = _raycastVel;
+    return;
+  }
 
   let velocity = _group.body.velocity;
   let pos = _group.body.position;
