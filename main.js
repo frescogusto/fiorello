@@ -17,8 +17,8 @@ const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
 const explosionVel = 5;
-const horMovement = 1.5;
-const verMovement = 0.8;
+const horMovement = 0.3;
+const verMovement = 0.5;
 const antiAliasing = true;
 const nMaxBodies = 100;
 
@@ -162,22 +162,22 @@ function initControls() {
   );
 
   // Orbit controls
-  orbit = new THREE.OrbitControls(camera, renderer.domElement);
-  orbit.target = new THREE.Vector3(0, 0.8, 0);
-  orbit.enablePan = false;
-  orbit.enableZoom = false;
-  orbit.enableDamping = true;
-  orbit.dampingFactor = 0.05;
-  orbit.maxPolarAngle = 1.57;
+  // orbit = new THREE.OrbitControls(camera, renderer.domElement);
+  // orbit.target = new THREE.Vector3(0, 0.8, 0);
+  // orbit.enablePan = false;
+  // orbit.enableZoom = false;
+  // orbit.enableDamping = true;
+  // orbit.dampingFactor = 0.05;
+  // orbit.maxPolarAngle = 1.57;
 }
 
 
 
 function animate() {
   requestAnimationFrame(animate);
-  orbit.update();
+  // orbit.update();
   updatePhysics();
-  //updateCam();
+  updateCam();
   render();
 
   if (debugMode) cannonDebugRenderer.update();
@@ -261,7 +261,7 @@ function applyEffects() {
 
   if (insanity) {
     for (let i = 0; i < objects.length; i++) {
-      objects[i].body.velocity = new CANNON.Vec3(objects[i].body.velocity.x * -2 * Math.random(), objects[i].body.velocity.y * -2 * Math.random(), objects[i].body.velocity.z * -2 * Math.random());
+      objects[i].body.velocity = new CANNON.Vec3(objects[i].body.velocity.x * -2.3 * Math.random(), objects[i].body.velocity.y * -2.3 * Math.random(), objects[i].body.velocity.z * -2.3 * Math.random());
     }
   }
 
@@ -272,19 +272,19 @@ function applyEffects() {
 
 
 
-// function updateCam() {
-//   let delta = clock.getDelta();
-//   camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
-//   camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta)
-//   let targetPos = new THREE.Vector3();
-//
-//   targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
-//   targetPos.y = camTarget.y + camH;
-//   targetPos.z = camTarget.z + camDist * Math.sin(camAngle);
-//
-//   camera.position.set(targetPos.x, targetPos.y, targetPos.z);
-//   camera.lookAt(camTarget);
-// }
+function updateCam() {
+  let delta = clock.getDelta();
+  camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
+  camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta)
+  let targetPos = new THREE.Vector3();
+
+  targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
+  targetPos.y = camTarget.y + camH;
+  targetPos.z = camTarget.z + camDist * Math.sin(camAngle);
+
+  camera.position.set(targetPos.x, targetPos.y, targetPos.z);
+  camera.lookAt(camTarget);
+}
 
 
 
