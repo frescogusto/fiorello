@@ -205,8 +205,6 @@ function clearExcessObjects() {
     world.remove(bodiesToRemove[i]);
   }
   bodiesToRemove = [];
-
-  console.log(disappearingObjs.length);
 }
 
 
@@ -357,6 +355,9 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
     } else {
       // if child is a group
       let subGroup = new THREE.Group();
+      subGroup.name = "SubEmpty";
+      subGroup.position.set(child.position.x, child.position.y, child.position.z);
+      subGroup.quaternion.set(child.quaternion.x, child.quaternion.y, child.quaternion.z, child.quaternion.w);
       for (let j = 0; j < child.children.length; j++) {
         let grandchild = _obj.children[i].children[j];
 
@@ -368,13 +369,8 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
         grandchild.material = mat;
         grandchild.castShadow = true;
         grandchild.receiveShadow = true;
-        grandchild.position.x += child.position.x;
-        grandchild.position.y += child.position.y;
-        grandchild.position.z += child.position.z;
-        // DOVREBBE ESSERE SUBGROUP MANNAGGIA LA MISERIA
         subGroup.add(grandchild.clone());
       }
-      subGroup.name = "SubEmpty";
       group.add(subGroup);
     }
   }
@@ -464,6 +460,8 @@ function SpawnObj(x, y = 5, z) {
 
   let index = Math.floor(Math.random() * prefabs.length);
   let spawned = Instantiate(prefabs[index].clone());
+
+  if (spawned == null) return;
 
   spawned.body.position = new CANNON.Vec3(x, y, z);
 
