@@ -1,12 +1,14 @@
 var world, mass, body, shape, timeStep = 1 / 60,
   camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock;
-var earthquake = false, tornado = false, insanity = false;
+var earthquake = false, earthquakeMag = 0;
+var tornado = false, insanity = false;
 
 // To be synced
 var objects = [];
 var prefabs = [];
 var bodiesToRemove = [];
 var disappearingObjs = [];
+var staticGroup;
 var N = 0;
 
 // SETTINGS
@@ -95,6 +97,9 @@ function initThree() {
   window.addEventListener( 'resize', onWindowResize, false );
 
   clock = new THREE.Clock();
+
+  staticGroup = new THREE.Group();
+  scene.add(staticGroup);
 }
 
 
@@ -118,6 +123,13 @@ function initCannon() {
   // for (let index = 0; index < 10; index++) {
   //   addObject(index)
   // }
+
+  let staticGroupBody = new CANNON.Body({
+    mass: 0
+  });
+  staticGroupBody.position.set(0, 0, 0);
+  world.add(staticGroupBody);
+  staticGroup.body = staticGroupBody;
 
   if (debugMode) cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 }
@@ -174,7 +186,6 @@ function animate() {
 
 
 function updatePhysics() {
-  console.log(objects.length);
 
   // Step the physics world
   world.step(timeStep);
@@ -218,7 +229,27 @@ function clearExcessObjects() {
 
 
 function applyEffects() {
+  // Apply earthquake
+  if (earthquakeMag > 0.05 || earthquake) {
+    let targetMag;
+    if (earthquake) targetMag = 1;
+    else targetMag = 0;
+    earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, targetMag, 0.02);
+    console.log(earthquakeMag);
 
+    if (renderer.info.render.frame % 5 == 0) {
+      let x = (Math.random() * 0.03 - 0.015) * earthquakeMag;
+      let y = (Math.random() * 0.03 - 0.015) * earthquakeMag;
+      let z = (Math.random() * 0.03 - 0.015) * earthquakeMag;
+      staticGroup.body.quaternion.set(x, y, z, 1);
+    }
+  } else {
+    staticGroup.body.position.setZero();
+  }
+
+  // Apply physics to three.js
+  staticGroup.position.copy(staticGroup.body.position);
+  staticGroup.quaternion.copy(staticGroup.body.quaternion);
 }
 
 
@@ -462,9 +493,22 @@ function Instantiate(newObj, canBreak) {
   if (phsxObj == null) return null;
 
   // Add to the world and scene
-  world.add(phsxObj.body);
-  scene.add(phsxObj);
-  if (phsxObj.userData.PhsxBehavior == 1) objects.push(phsxObj);
+  if (phsxObj.userData.PhsxBehavior == 0) {
+    // If static
+    for (let i = 0; i < phsxObj.body.shapes.length; i++) {
+      staticGroup.body.addShape(phsxObj.body.shapes[i],
+        new CANNON.Vec3(phsxObj.position.x, phsxObj.position.y, phsxObj.position.z),
+        new CANNON.Quaternion(phsxObj.quaternion.x, phsxObj.quaternion.y, phsxObj.quaternion.z, phsxObj.quaternion.w)
+      );
+    }
+    staticGroup.add(phsxObj);
+  }
+  if (phsxObj.userData.PhsxBehavior == 1) {
+    // If dynamic
+    objects.push(phsxObj);
+    world.add(phsxObj.body);
+    scene.add(phsxObj);
+  }
 
   return phsxObj;
 }
@@ -544,19 +588,37 @@ function Delete(item) {
 }
 
 
-function Earthquake() {
+function ToggleEarthquake(ele) {
   earthquake = !earthquake;
+
+  if (earthquake) {
+    ele.style.color = "lime";
+  } else {
+    ele.style.color = "black";
+  }
 }
 
 
 
-function Tornado() {
+function ToggleTornado(ele) {
   tornado = !tornado;
+
+  if (tornado) {
+    ele.style.color = "lime";
+  } else {
+    ele.style.color = "black";
+  }
 }
 
 
-function Insanity() {
+function ToggleInsanity(ele) {
   insanity = !insanity;
+
+  if (insanity) {
+    ele.style.color = "lime";
+  } else {
+    ele.style.color = "black";
+  }
 }
 
 
