@@ -10,7 +10,7 @@ var disappearingObjs = [];
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/TestScene.gltf'
+const modelUrl = '3d/STANZA_MEMPHIS.gltf'
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
@@ -179,14 +179,12 @@ function updatePhysics() {
   world.step(timeStep);
 
   // Update positions
-  for (let i = 0; i !== objects.length; i++) {
-    //if (objects[i] != null) {
-      objects[i].position.copy(objects[i].body.position);
-      objects[i].quaternion.copy(objects[i].body.quaternion);
+  for (let i = 0; i < objects.length; i++) {
+    objects[i].position.copy(objects[i].body.position);
+    objects[i].quaternion.copy(objects[i].body.quaternion);
 
-      // Delete falling bodies
-      if (objects[i].body.position.y < -8) Delete(objects[i]);
-    //}
+    // Delete falling bodies
+    if (objects[i].body.position.y < -8) Delete(objects[i]);
   }
 
   clearExcessObjects();
@@ -460,7 +458,7 @@ function Instantiate(newObj, canBreak) {
     console.log("No Phisics");
   }
 
-  //if (phsxObj == null) return;
+  if (phsxObj == null) return null;
 
   // Add to the world and scene
   world.add(phsxObj.body);
@@ -477,7 +475,7 @@ function SpawnObj(x, y = 5, z) {
   let index = Math.floor(Math.random() * prefabs.length);
   let spawned = Instantiate(prefabs[index].clone());
 
-  //if (spawned == null) return;
+  if (spawned == null) return;
 
   spawned.body.position = new CANNON.Vec3(x, y, z);
 
