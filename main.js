@@ -2,6 +2,7 @@ var world, mass, body, shape, timeStep = 1 / 60,
   camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, insanity = false;
+var enableSpawn = false;
 
 // To be synced
 var objects = [];
@@ -12,7 +13,7 @@ var staticGroup;
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/STANZA_MEMPHIS.gltf'
+const modelUrl = '3d/STANZA 2.gltf'
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
@@ -20,7 +21,8 @@ const explosionVel = 5;
 const horMovement = 0.3;
 const verMovement = 0.5;
 const antiAliasing = true;
-const nMaxBodies = 100;
+const nMinBodies = 20;
+const nMaxBodies = 50;
 
 
 
@@ -220,11 +222,17 @@ function clearExcessObjects() {
     if (disappearingObjs[i].scale.x < 0.05) Delete(disappearingObjs[i]);
   }
 
+  // If necessary, spawn some objects
+  if (objects.length > nMinBodies) enableSpawn = true;
+  if (enableSpawn && objects.length < nMinBodies) SpawnObj();
+
   // Remove unused bodies (here so it doesnt happen within worldStep)
   for (let i = 0; i < bodiesToRemove.length; i++) {
     world.remove(bodiesToRemove[i]);
   }
   bodiesToRemove = [];
+
+  console.log(objects.length);
 }
 
 
@@ -236,7 +244,6 @@ function applyEffects() {
     if (earthquake) targetMag = 1;
     else targetMag = 0;
     earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, targetMag, 0.02);
-    console.log(earthquakeMag);
 
     if (renderer.info.render.frame % 5 == 0) {
       let x = (Math.random() * 0.03 - 0.015) * earthquakeMag;
@@ -251,17 +258,15 @@ function applyEffects() {
   // Tornado
 
   // Insanity
-  // if (insanity) {
-  //   for (let i = 0; i < objects.length; i++) {
-  //     // let impulse = new CANNON.Vec3(0, objects[i].body.mass * 0.17, 0);
-  //     let impulse = new CANNON.Vec3(0, objects[i].body.mass * (3 - objects[i].position.y) * 0.34 * Math.random(), 0);
-  //     objects[i].body.applyImpulse(impulse, objects[i].body.position);
-  //   }
-  // }
-
   if (insanity) {
     for (let i = 0; i < objects.length; i++) {
-      objects[i].body.velocity = new CANNON.Vec3(objects[i].body.velocity.x * -2.3 * Math.random(), objects[i].body.velocity.y * -2.3 * Math.random(), objects[i].body.velocity.z * -2.3 * Math.random());
+      let chanceToFreeze = Math.random();
+      if (chanceToFreeze < 0.005) {
+        objects[i].body.velocity.setZero();
+        objects[i].body.angularVelocity.setZero();
+      } else {
+        objects[i].body.velocity = new CANNON.Vec3(objects[i].body.velocity.x * -2.3 * Math.random(), objects[i].body.velocity.y * -2.3 * Math.random(), objects[i].body.velocity.z * -2.3 * Math.random());
+      }
     }
   }
 
@@ -348,6 +353,7 @@ function CreatePhysicalObj(_obj) {
   mesh.material = mat;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+  mesh.frustumCulled = false;
   scene.add(mesh);
 
   // Output mesh with body
@@ -415,6 +421,7 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
       child.material = mat;
       child.castShadow = true;
       child.receiveShadow = true;
+      child.frustumCulled = false;
       group.add(child.clone());
     } else {
       // if child is a group
@@ -433,6 +440,7 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
         grandchild.material = mat;
         grandchild.castShadow = true;
         grandchild.receiveShadow = true;
+        grandchild.frustumCulled = false;
         subGroup.add(grandchild.clone());
       }
       group.add(subGroup);
@@ -444,14 +452,15 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
   body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
 
   // Account for collisions
-  if (canBreak) {
-    body.addEventListener("collide", function(e) {
-      var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
-      if (Math.abs(relativeVelocity) > explosionVel) {
-        Explode(group);
-      }
-    });
-  }
+  // if (canBreak) {
+  //   body.addEventListener("collide", function(e) {
+  //     var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
+  //     if (Math.abs(relativeVelocity) > explosionVel) {
+  //       Explode(group);
+  //     }
+  //   });
+  // }
+  body.breakable = canBreak;
 
   // Add to world
   group.body = body;
@@ -533,37 +542,48 @@ function Instantiate(newObj, canBreak) {
 
 
 
-function SpawnObj(x, y = 5, z) {
+function SpawnObj() {
 
   let index = Math.floor(Math.random() * prefabs.length);
+
+  for (let i = 0; i < objects.length; i++) {
+    if (prefabs[index].children.length == objects[i].children.length) {
+      console.log("Non spawnare");
+      return;
+    }
+  }
+
   let spawned = Instantiate(prefabs[index].clone());
 
   if (spawned == null) return;
-
-  spawned.body.position = new CANNON.Vec3(x, y, z);
-
-  var vec = new THREE.Vector3(); // create once and reuse
-  var pos = new THREE.Vector3(); // create once and reuse
-  vec.set(mouse.x, mouse.y, 0.5);
-  vec.unproject(camera);
-  vec.sub(camera.position).normalize();
-
-  // var distance = -camera.position.z / vec.z;
-  //
-  // pos.copy(camera.position).add(vec.multiplyScalar(distance));
-
 }
 
 
 function Click() {
 
   raycaster.setFromCamera(mouse, camera);
-  // SpawnObj();
+  const intersect = raycaster.intersectObjects(objects, true)[0];
+  if (intersect == null) return;
+
+  console.log(camera.position);
+  console.log(intersect.point);
+  let direction = new CANNON.Vec3(camera.x - intersect.point.x, camera.y - intersect.point.y, camera.z - intersect.point.z);
+  // direction.mult(1000);
+
+  if (intersect.object.parent == scene) {
+    Explode(intersect.object, direction);
+  } else if (intersect.object.parent.parent == scene) {
+    Explode(intersect.object.parent, direction);
+  } else if (intersect.object.parent.parent.parent == scene) {
+    Explode(intersect.object.parent.parent, direction);
+  }
 }
 
 
 
-function Explode(_group) {
+function Explode(_group, _raycastVel = new CANNON.Vec3(0, 0, 0)) {
+  if (!_group.body.breakable) return;
+
   let velocity = _group.body.velocity;
   let pos = _group.body.position;
 
@@ -580,8 +600,8 @@ function Explode(_group) {
     // } else {
       let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
       let centerVel = pos.vsub(newPos).mult(15);
-      let oppositeVel = velocity.mult(-0.3);
-      newObj.body.velocity = centerVel.vadd(oppositeVel);
+      console.log(_raycastVel);
+      newObj.body.velocity = centerVel.vadd(_raycastVel);
     // }
 
     scene.remove(child);
