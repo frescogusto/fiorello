@@ -174,6 +174,7 @@ function animate() {
 
 
 function updatePhysics() {
+  console.log(objects.length);
 
   // Step the physics world
   world.step(timeStep);
