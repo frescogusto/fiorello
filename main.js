@@ -42,8 +42,8 @@ function initThree() {
   scene.background = new THREE.Color(0xdfebf5);
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
-  // camera.position.z = 8;
-  // camera.position.y = 3;
+  camera.position.z = 5.5;
+  camera.position.y = 1.5;
   scene.add(camera);
 
   // // floor
@@ -149,17 +149,23 @@ function initControls() {
   );
 
   // Orbit controls
-  //orbit = new THREE.OrbitControls(camera, renderer.domElement);
+  orbit = new THREE.OrbitControls(camera, renderer.domElement);
+  orbit.target = new THREE.Vector3(0, 0.8, 0);
+  orbit.enablePan = false;
+  orbit.enableZoom = false;
+  orbit.enableDamping = true;
+  orbit.dampingFactor = 0.05;
+  orbit.maxPolarAngle = 1.57;
+  console.log(orbit);
 }
 
 
 
 function animate() {
-
   requestAnimationFrame(animate);
-  //orbit.update();
+  orbit.update();
   updatePhysics();
-  updateCam();
+  //updateCam();
   render();
 
   if (debugMode) cannonDebugRenderer.update();
@@ -209,19 +215,19 @@ function clearExcessObjects() {
 
 
 
-function updateCam() {
-  let delta = clock.getDelta();
-  camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
-  camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta)
-  let targetPos = new THREE.Vector3();
-
-  targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
-  targetPos.y = camTarget.y + camH;
-  targetPos.z = camTarget.z + camDist * Math.sin(camAngle);
-
-  camera.position.set(targetPos.x, targetPos.y, targetPos.z);
-  camera.lookAt(camTarget);
-}
+// function updateCam() {
+//   let delta = clock.getDelta();
+//   camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
+//   camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta)
+//   let targetPos = new THREE.Vector3();
+//
+//   targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
+//   targetPos.y = camTarget.y + camH;
+//   targetPos.z = camTarget.z + camDist * Math.sin(camAngle);
+//
+//   camera.position.set(targetPos.x, targetPos.y, targetPos.z);
+//   camera.lookAt(camTarget);
+// }
 
 
 
@@ -538,7 +544,7 @@ function Tornado() {
 }
 
 
-function NoGravity() {
+function Insanity() {
   console.log("E si vola");
 }
 

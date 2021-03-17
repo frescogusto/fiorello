@@ -19,6 +19,7 @@ body {
   line-height: 150px;
   text-align: center;
   font-size: 72px;
+  font-family: sans-serif;
   cursor: pointer;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
