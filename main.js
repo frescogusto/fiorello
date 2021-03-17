@@ -10,7 +10,7 @@ var disappearingObjs = [];
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/stanzaconfisica.gltf'
+const modelUrl = '3d/STANZA_MEMPHIS.gltf'
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 1.2, 0);
 const camDist = 5.3;
@@ -157,7 +157,6 @@ function initControls() {
   orbit.enableDamping = true;
   orbit.dampingFactor = 0.05;
   orbit.maxPolarAngle = 1.57;
-  console.log(orbit);
 }
 
 
@@ -191,6 +190,7 @@ function updatePhysics() {
   }
 
   clearExcessObjects();
+  applyEffects();
 }
 
 
@@ -214,6 +214,12 @@ function clearExcessObjects() {
     world.remove(bodiesToRemove[i]);
   }
   bodiesToRemove = [];
+}
+
+
+
+function applyEffects() {
+
 }
 
 
@@ -290,6 +296,7 @@ function CreatePhysicalObj(_obj) {
     color: col
   });
   if (mesh.material.map != null) mat.map = mesh.material.map;
+  // mat.shininess = _obj.material.metalness * 1000;
   mesh.material = mat;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
