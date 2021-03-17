@@ -1,5 +1,6 @@
 var world, mass, body, shape, timeStep = 1 / 60,
   camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock;
+var earthquake = false, tornado = false, insanity = false;
 
 // To be synced
 var objects = [];
@@ -180,11 +181,13 @@ function updatePhysics() {
 
   // Update positions
   for (let i = 0; i !== objects.length; i++) {
-    objects[i].position.copy(objects[i].body.position);
-    objects[i].quaternion.copy(objects[i].body.quaternion);
+    if (objects[i] != null) {
+      objects[i].position.copy(objects[i].body.position);
+      objects[i].quaternion.copy(objects[i].body.quaternion);
 
-    // Delete falling bodies
-    if (objects[i].body.position.y < -8) Delete(objects[i]);
+      // Delete falling bodies
+      if (objects[i].body.position.y < -8) Delete(objects[i]);
+    }
   }
 
   clearExcessObjects();
@@ -487,7 +490,7 @@ function SpawnObj(x, y = 5, z) {
 function Click() {
 
   raycaster.setFromCamera(mouse, camera);
-  SpawnObj();
+  // SpawnObj();
 }
 
 
@@ -504,12 +507,14 @@ function Explode(_group) {
 
     let newObj = Instantiate(child, false);
 
-    //newObj.body.velocity = new CANNON.Vec3(-0.5 * velocity.x, -0.5 * velocity.y, -0.5 * velocity.z); // REALISTICO
-    // newObj.body.velocity = velocity;  //PER FARLO IMPAZZIRE
-    let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
-    let centerVel = pos.vsub(newPos).mult(15);
-    let oppositeVel = velocity.mult(-0.3);
-    newObj.body.velocity = centerVel.vadd(oppositeVel);
+    if (insanity) {
+      newObj.body.velocity = velocity;  //PER FARLO IMPAZZIRE
+    } else {
+      let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
+      let centerVel = pos.vsub(newPos).mult(15);
+      let oppositeVel = velocity.mult(-0.3);
+      newObj.body.velocity = centerVel.vadd(oppositeVel);
+    }
 
     scene.remove(child);
   }
@@ -534,18 +539,18 @@ function Delete(item) {
 
 
 function Earthquake() {
-  console.log("Trema tutto");
+  earthquake = !earthquake;
 }
 
 
 
 function Tornado() {
-  console.log("Mi gira la testa");
+  tornado = !tornado;
 }
 
 
 function Insanity() {
-  console.log("E si vola");
+  insanity = !insanity;
 }
 
 
