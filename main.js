@@ -187,6 +187,8 @@ function animate() {
 
 function updatePhysics() {
 
+  applyEffects();
+
   // Step the physics world
   world.step(timeStep);
 
@@ -200,7 +202,6 @@ function updatePhysics() {
   }
 
   clearExcessObjects();
-  applyEffects();
 }
 
 
@@ -229,7 +230,7 @@ function clearExcessObjects() {
 
 
 function applyEffects() {
-  // Apply earthquake
+  // Earthquake
   if (earthquakeMag > 0.05 || earthquake) {
     let targetMag;
     if (earthquake) targetMag = 1;
@@ -245,6 +246,23 @@ function applyEffects() {
     }
   } else {
     staticGroup.body.position.setZero();
+  }
+
+  // Tornado
+
+  // Insanity
+  // if (insanity) {
+  //   for (let i = 0; i < objects.length; i++) {
+  //     // let impulse = new CANNON.Vec3(0, objects[i].body.mass * 0.17, 0);
+  //     let impulse = new CANNON.Vec3(0, objects[i].body.mass * (3 - objects[i].position.y) * 0.34 * Math.random(), 0);
+  //     objects[i].body.applyImpulse(impulse, objects[i].body.position);
+  //   }
+  // }
+
+  if (insanity) {
+    for (let i = 0; i < objects.length; i++) {
+      objects[i].body.velocity = new CANNON.Vec3(objects[i].body.velocity.x * -2 * Math.random(), objects[i].body.velocity.y * -2 * Math.random(), objects[i].body.velocity.z * -2 * Math.random());
+    }
   }
 
   // Apply physics to three.js
@@ -557,14 +575,14 @@ function Explode(_group) {
 
     let newObj = Instantiate(child, false);
 
-    if (insanity) {
-      newObj.body.velocity = velocity;  //PER FARLO IMPAZZIRE
-    } else {
+    // if (insanity) {
+    //   newObj.body.velocity = velocity;  //PER FARLO IMPAZZIRE
+    // } else {
       let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
       let centerVel = pos.vsub(newPos).mult(15);
       let oppositeVel = velocity.mult(-0.3);
       newObj.body.velocity = centerVel.vadd(oppositeVel);
-    }
+    // }
 
     scene.remove(child);
   }
