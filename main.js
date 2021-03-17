@@ -5,6 +5,7 @@ var world, mass, body, shape, timeStep = 1 / 60,
 var objects = [];
 var prefabs = [];
 var bodiesToRemove = [];
+var disappearingObjs = [];
 var N = 0;
 
 // SETTINGS
@@ -15,6 +16,8 @@ const camDist = 5.3;
 const explosionVel = 5;
 const horMovement = 1.5;
 const verMovement = 0.8;
+const antiAliasing = true;
+const nMaxBodies = 100;
 
 
 
@@ -84,9 +87,11 @@ function initThree() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.antialias = antiAliasing;
 
   document.body.appendChild(renderer.domElement);
+  window.addEventListener( 'resize', onWindowResize, false );
 
   clock = new THREE.Clock();
 }
@@ -167,16 +172,41 @@ function updatePhysics() {
   // Step the physics world
   world.step(timeStep);
 
+  // Update positions
   for (let i = 0; i !== objects.length; i++) {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
+
+    // Delete falling bodies
+    if (objects[i].body.position.y < -8) Delete(objects[i]);
   }
 
-  // Remove unused bodies
+  clearExcessObjects();
+}
+
+
+
+function clearExcessObjects() {
+
+  // If maximum bodies number is exceeded, delete some
+  let diff = objects.length - nMaxBodies - disappearingObjs.length;
+  for (let i = 0; i < diff; i++) {
+    disappearingObjs.push(objects[0]);
+  }
+
+  // Scale down and delete excess objects
+  for (let i = 0; i < disappearingObjs.length; i++) {
+    disappearingObjs[i].scale.subScalar(0.01);
+    if (disappearingObjs[i].scale.x < 0.05) Delete(disappearingObjs[i]);
+  }
+
+  // Remove unused bodies (here so it doesnt happen within worldStep)
   for (let i = 0; i < bodiesToRemove.length; i++) {
     world.remove(bodiesToRemove[i]);
   }
   bodiesToRemove = [];
+
+  console.log(disappearingObjs.length);
 }
 
 
@@ -200,6 +230,15 @@ function updateCam() {
 function render() {
 
   renderer.render(scene, camera);
+}
+
+
+
+function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 
@@ -251,6 +290,7 @@ function CreatePhysicalObj(_obj) {
 
   // Output mesh with body
   mesh.body = body;
+  mesh.userData.PhsxBehavior = _obj.userData.PhsxBehavior;
   return mesh;
 }
 
@@ -304,6 +344,7 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
     let child = _obj.children[i];
 
     if (child.children.length == 0) {
+      // If child is a single mesh
       col = "#" + child.material.color.getHexString();
       mat = new THREE.MeshPhongMaterial({
         color: col
@@ -314,6 +355,7 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
       child.receiveShadow = true;
       group.add(child.clone());
     } else {
+      // if child is a group
       let subGroup = new THREE.Group();
       for (let j = 0; j < child.children.length; j++) {
         let grandchild = _obj.children[i].children[j];
@@ -346,7 +388,6 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
     body.addEventListener("collide", function(e) {
       var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
       if (Math.abs(relativeVelocity) > explosionVel) {
-        console.log("Esplosione");
         Explode(group);
       }
     });
@@ -355,6 +396,7 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
   // Add to world
   group.body = body;
   group.name = "Empty";
+  group.userData.PhsxBehavior = _obj.userData.PhsxBehavior;
   return group;
 }
 
@@ -363,6 +405,8 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
 function GetCollider(_mesh) {
   let _shape;
   if (!_mesh.isMesh) return null;
+
+  // returns a cannon shape depending on the type of solid and its bounding box
 
   let bb = _mesh.geometry.boundingBox.max;
 
@@ -395,21 +439,21 @@ function GetCollider(_mesh) {
 function Instantiate(newObj, canBreak) {
   let phsxObj = null;
 
+  // Chooses whether to return a new mesh or group depepending on the architecture
   if (newObj.isMesh) {
     phsxObj = CreatePhysicalObj(newObj);
-    console.log("New obj");
   } else if (newObj.name.includes("Empty") && newObj.children.length > 0) {
     phsxObj = CreatePhysicalGroup(newObj, canBreak);
-    console.log("New group");
   } else {
     console.log("No Phisics");
   }
 
   if (phsxObj == null) return;
 
+  // Add to the world and scene
   world.add(phsxObj.body);
   scene.add(phsxObj);
-  objects.push(phsxObj);
+  if (phsxObj.userData.PhsxBehavior == 1) objects.push(phsxObj);
 
   return phsxObj;
 }
@@ -472,12 +516,32 @@ function Explode(_group) {
 
 
 function Delete(item) {
+  // Deletes object both from scene and cannon world
 
   if (item.body != null) bodiesToRemove.push(item.body);
   scene.remove(item);
   objects = objects.filter(function(e) {
     return e !== item;
   })
+  disappearingObjs = disappearingObjs.filter(function(e) {
+    return e !== item;
+  })
+}
+
+
+function Earthquake() {
+  console.log("Trema tutto");
+}
+
+
+
+function Tornado() {
+  console.log("Mi gira la testa");
+}
+
+
+function NoGravity() {
+  console.log("E si vola");
 }
 
 
