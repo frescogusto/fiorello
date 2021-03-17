@@ -13,7 +13,7 @@ var staticGroup;
 var N = 0;
 
 // SETTINGS
-const modelUrl = '3d/STANZA 2.gltf'
+const modelUrls = ['3d/STANZA 2.gltf', '3d/STANZA 3.gltf']
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 0.8, 0);
 const camDist = 4.3;
@@ -34,7 +34,8 @@ animate();
 
 const manager = new THREE.LoadingManager();
 const loader = new THREE.GLTFLoader(manager);
-loader.load(modelUrl, function(gltf) {
+let fileIndex = Math.floor(Math.random() * modelUrls.length)
+loader.load(modelUrls[fileIndex], function(gltf) {
   console.log(gltf);
   LoadObjects(gltf.scene.children, true);
 });
