@@ -1,7 +1,8 @@
 var world, mass, body, shape, timeStep = 1 / 60,
-  camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock;
+  camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0;
 var earthquake = false, earthquakeMag = 0;
-var tornado = false, insanity = false;
+var tornado = false, tornadoMag = 0;
+var insanity = false;
 var enableSpawn = false;
 
 // To be synced
@@ -16,12 +17,11 @@ var N = 0;
 const modelUrls = ['3d/STANZA 2.gltf', '3d/STANZA 3.gltf']
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 0.8, 0);
-const camDist = 4.3;
-const explosionVel = 5;
+const camDist = 4;
+const explosionVel = 7;
 const horMovement = 0.3;
 const verMovement = 0.5;
 const antiAliasing = true;
-const nMinBodies = 15;
 const nMaxBodies = 50;
 
 
@@ -200,8 +200,8 @@ function updatePhysics() {
     objects[i].position.copy(objects[i].body.position);
     objects[i].quaternion.copy(objects[i].body.quaternion);
 
-    // Delete falling bodies
-    if (objects[i].body.position.y < -8) Delete(objects[i]);
+    // Delete out of area bodies
+    if (objects[i].body.position.y < -8 || objects[i].body.position.y > 8 || objects[i].body.position.x < -8 || objects[i].body.position.y > 8) Delete(objects[i]);
   }
 
   clearExcessObjects();
@@ -224,16 +224,15 @@ function clearExcessObjects() {
   }
 
   // If necessary, spawn some objects
-  if (objects.length > nMinBodies) enableSpawn = true;
-  if (enableSpawn && objects.length < nMinBodies) SpawnObj();
+  if (nMinBodies < objects.length && nMinBodies < 25) nMinBodies++;
+  console.log(nMinBodies);
+  if (objects.length < nMinBodies) SpawnObj();
 
   // Remove unused bodies (here so it doesnt happen within worldStep)
   for (let i = 0; i < bodiesToRemove.length; i++) {
     world.remove(bodiesToRemove[i]);
   }
   bodiesToRemove = [];
-
-  console.log(objects.length);
 }
 
 
@@ -241,10 +240,8 @@ function clearExcessObjects() {
 function applyEffects() {
   // Earthquake
   if (earthquakeMag > 0.05 || earthquake) {
-    let targetMag;
-    if (earthquake) targetMag = 1;
-    else targetMag = 0;
-    earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, targetMag, 0.02);
+    if (earthquake) earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, 1, 0.02);
+    else earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, 0, 0.02);
 
     if (renderer.info.render.frame % 5 == 0) {
       let x = (Math.random() * 0.03 - 0.015) * earthquakeMag;
@@ -257,9 +254,23 @@ function applyEffects() {
   }
 
   // Tornado
+  if (tornadoMag > 0.05 || tornado) {
+    if (tornado) tornadoMag = THREE.MathUtils.lerp(tornadoMag, 1, 0.02);
+    else tornadoMag = THREE.MathUtils.lerp(tornadoMag, 0, 0.02);
+
+    for (let i = 0; i < objects.length; i++) {
+      let distFromCenter = Math.sqrt(objects[i].body.position.x * objects[i].body.position.x + objects[i].body.position.z * objects[i].body.position.z);
+      let floatForce = new CANNON.Vec3(0, objects[i].body.mass * 11 - objects[i].body.position.y * 12 + Math.max(0, 1 - distFromCenter) * 50, 0); // float
+      let centerForce = new CANNON.Vec3(-objects[i].body.position.x * objects[i].body.mass, 0, -objects[i].body.position.z * objects[i].body.mass).scale(5);
+      let rotationForce = floatForce.clone().cross(centerForce).scale(0.003 * Math.max(0, 2 - distFromCenter));
+
+      let force = new CANNON.Vec3(floatForce.x + centerForce.x + rotationForce.x, floatForce.y + centerForce.y + rotationForce.y, floatForce.z + centerForce.z + rotationForce.z).scale(tornadoMag);
+      objects[i].body.applyForce(force, objects[i].body.position);
+    }
+  }
 
   // Insanity
-  if (insanity) {
+  if (insanity &&  renderer.info.render.frame % 2 == 0) {
     for (let i = 0; i < objects.length; i++) {
       let chanceToFreeze = Math.random();
       if (chanceToFreeze < 0.005) {
@@ -453,14 +464,14 @@ function CreatePhysicalGroup(_obj, canBreak = true) {
   body.quaternion.set(group.quaternion.x, group.quaternion.y, group.quaternion.z, group.quaternion.w);
 
   // Account for collisions
-  // if (canBreak) {
-  //   body.addEventListener("collide", function(e) {
-  //     var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
-  //     if (Math.abs(relativeVelocity) > explosionVel) {
-  //       Explode(group);
-  //     }
-  //   });
-  // }
+  if (canBreak) {
+    body.addEventListener("collide", function(e) {
+      var relativeVelocity = e.contact.getImpactVelocityAlongNormal();
+      if (Math.abs(relativeVelocity) > explosionVel) {
+        Explode(group);
+      }
+    });
+  }
   body.breakable = canBreak;
 
   // Add to world
@@ -549,7 +560,6 @@ function SpawnObj() {
 
   for (let i = 0; i < objects.length; i++) {
     if (prefabs[index].children.length == objects[i].children.length) {
-      console.log("Non spawnare");
       return;
     }
   }
@@ -598,14 +608,10 @@ function Explode(_group, _raycastVel = new CANNON.Vec3(0, 0, 0)) {
 
     let newObj = Instantiate(child, false);
 
-    // if (insanity) {
-    //   newObj.body.velocity = velocity;  //PER FARLO IMPAZZIRE
-    // } else {
-      let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
-      let centerVel = pos.vsub(newPos).mult(15);
-      console.log(_raycastVel);
-      newObj.body.velocity = centerVel.vadd(_raycastVel);
-    // }
+    let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
+    let centerVel = pos.vsub(newPos).mult(15);
+    console.log(_raycastVel);
+    newObj.body.velocity = centerVel.vadd(_raycastVel);
 
     scene.remove(child);
   }
