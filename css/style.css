@@ -1,3 +1,9 @@
+@font-face {
+  font-family:"memphi";
+  font-weight: bold;
+  src: url('../font/memphi.eot?#iefix') format('embedded-opentype'), url('../font/memphi.svg') format('svg'), url('../font/memphi.woff') format('woff'), url('../font/memphi.woff2') format('woff2');
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -5,11 +11,26 @@ body {
   text-align: center;
   font-size: 36px;
   line-height: 1;
-  font-family: "Union-Bold", serif;
+  font-family: "memphi", serif;
   text-transform: uppercase;
   font-weight: bold;
   letter-spacing: -1px;
   text-transform: uppercase;
+}
+
+.button {
+  margin: 0 9px;
+  cursor: pointer;
+  color: white;
+  pointer-events: auto;
+  border: 4px solid;
+  border-radius: 100%;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 .scene-0,
@@ -47,25 +68,6 @@ body {
 }
 
 .scene-2 .button--active {
-  color: #f3972f;
-  border-color: #23d5d4;
-  color: #ab35b2;
-  border-color: #f3972f;
-}
-
-.scene-0 .button:hover {
-  color: #ff3b69;
-  border-color: #36de95;
-}
-
-.scene-1 .button:hover {
-  color: #2665ff;
-  border-color: #ff4944;
-}
-
-.scene-2 .button:hover {
-  color: #f3972f;
-  border-color: #23d5d4;
   color: #ab35b2;
   border-color: #f3972f;
 }
@@ -74,6 +76,9 @@ canvas {
   pointer-events: none;
   position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1;
 }
 
@@ -119,67 +124,9 @@ header {
   pointer-events: none;
 }
 
-@media only screen and (max-width: 800px) {
-  header svg {
-    margin: 12px 0;
-  }
-  #interface {
-    justify-content: space-between;
-    bottom: 56px;
-    z-index: 2;
-  }
-  #interface .button {
-    margin: 0;
-  }
-}
-
-@media only screen and (max-width: 600px) {
-  .scene-0 .button:hover {
-    color: white;
-    border-color: white;
-  }
-  .scene-1 .button:hover {
-    color: white;
-    border-color: white;
-  }
-  .scene-2 .button:hover {
-    color: white;
-    border-color: white;
-  }
-  body {
-    font-size: 24px;
-  }
-  footer .button {
-    width: 50%;
-  }
-  #interface {
-    display: block;
-    bottom: 44px;
-    z-index: 2;
-  }
-  #interface .button {
-    margin: 6px 0;
-  }
-}
-
 header svg {
   width: 100%;
   height: 24.8vw;
-}
-
-.button {
-  margin: 0 9px;
-  cursor: pointer;
-  color: white;
-  pointer-events: auto;
-  border: 4px solid;
-  border-radius: 100%;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 .top {
@@ -232,4 +179,50 @@ header svg {
 
 .hidden {
   display: none;
+}
+
+@media only screen and (max-width: 800px) {
+  header svg {
+    margin: 6px 0;
+  }
+  #interface {
+    justify-content: space-between;
+    z-index: 2;
+  }
+  #interface .button {
+    margin: 0;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .scene-0 .button--active {
+    color: #ff3b69;
+    border-color: #36de95;
+  }
+  
+  .scene-1 .button--active {
+    color: #2665ff;
+    border-color: #ff4944;
+  }
+  
+  .scene-2 .button--active {
+    color: #f3972f;
+    border-color: #23d5d4;
+    color: #ab35b2;
+    border-color: #f3972f;
+  }
+  
+  body {
+    font-size: 24px;
+  }
+  footer .button {
+    width: 50%;
+  }
+  #interface {
+    display: block;
+    padding: 9px 18px;
+  }
+  #interface .button {
+    margin: 6px 0;
+  }
 }
