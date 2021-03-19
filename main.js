@@ -812,14 +812,16 @@ function ToggleInsanity(ele) {
 }
 
 
-function ToggleSound() {
+function ToggleSound(ele) {
   var context = THREE.AudioContext.getContext();
   if (context == null) return;
 
   if (audioOn) {
     context.suspend();
+    ele.innerHTML='sound off'
   } else {
     context.resume();
+    ele.innerHTML='sound on'
   }
   audioOn = !audioOn;
 }
