@@ -136,7 +136,7 @@ footer {
   left: 0;
   z-index: 2;
   margin: auto;
-  background-color: black;
+  background: #dfebf5;
 }
 
 #startButton {
@@ -168,4 +168,19 @@ footer {
 
 .hidden {
   display: none;
+}
+
+.scene-0 .button--active {
+  color: #ff3b69;
+  border-color: #36de95;
+}
+
+.scene-1 .button--active {
+  color: #2665ff;
+  border-color: #fff546;
+}
+
+.scene-2 .button--active {
+  color: #f3972f;
+  border-color: #23d5d4;
 }
