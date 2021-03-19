@@ -1,5 +1,5 @@
 var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material,
-    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0, gyroX, gyroY;
+    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0, gyroX, gyroY, camDist = 4;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, tornadoMag = 0;
 var insanity = false, insanityMag = 0;
@@ -23,8 +23,7 @@ const explosionAudioUrls = ['audio/hit1.mp3', 'audio/hit2.mp3', 'audio/hit3.mp3'
 const hitAudioUrls = ['audio/thump1.mp3', 'audio/thump2.mp3', 'audio/thump3.mp3', 'audio/thump4.mp3'];
 const spawnAudioUrl = 'audio/pop.mp3';
 const debugMode = false;
-const camTarget = new THREE.Vector3(0, 0.8, 0);
-const camDist = 4;
+var camTarget = new THREE.Vector3(0, 0.8, 0);
 const explosionVel = 7;
 const horMovement = 0.3;
 const verMovement = 0.5;
@@ -92,10 +91,10 @@ function init() {
 function initThree() {
 
   scene = new THREE.Scene();
-  // scene.background = new THREE.Color(0xdfebf5);
+  // scene.background = new THREE.Color(0xff0000);
 
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 100);
-  camera.near = 0;
+  camera.near = 0.01;
   camera.position.z = 5.5;
   camera.position.y = 1.5;
   scene.add(camera);
@@ -155,6 +154,8 @@ function initThree() {
 
   staticGroup = new THREE.Group();
   scene.add(staticGroup);
+
+  onWindowResize();
 }
 
 
@@ -295,34 +296,6 @@ function updatePhysics() {
 
 
 
-function clearExcessObjects() {
-
-  // If maximum bodies number is exceeded, delete some
-  let diff = objects.length - nMaxBodies - disappearingObjs.length;
-  for (let i = 0; i < diff; i++) {
-    disappearingObjs.push(objects[0]);
-  }
-
-  // Scale down and delete excess objects
-  for (let i = 0; i < disappearingObjs.length; i++) {
-    disappearingObjs[i].scale.subScalar(0.01);
-    if (disappearingObjs[i].scale.x < 0.05) Delete(disappearingObjs[i]);
-  }
-
-  // If necessary, spawn some objects
-  if (nMinBodies < objects.length && nMinBodies < 25) nMinBodies++;
-  console.log(nMinBodies);
-  if (objects.length < nMinBodies) SpawnObj();
-
-  // Remove unused bodies (here so it doesnt happen within worldStep)
-  for (let i = 0; i < bodiesToRemove.length; i++) {
-    world.remove(bodiesToRemove[i]);
-  }
-  bodiesToRemove = [];
-}
-
-
-
 function applyEffects() {
   // Earthquake
   if (earthquakeMag > 0.05 || earthquake) {
@@ -397,6 +370,33 @@ function applyEffects() {
 
 
 
+function clearExcessObjects() {
+
+  // If maximum bodies number is exceeded, delete some
+  let diff = objects.length - nMaxBodies - disappearingObjs.length;
+  for (let i = 0; i < diff; i++) {
+    disappearingObjs.push(objects[0]);
+  }
+
+  // Scale down and delete excess objects
+  for (let i = 0; i < disappearingObjs.length; i++) {
+    disappearingObjs[i].scale.subScalar(0.01);
+    if (disappearingObjs[i].scale.x < 0.05) Delete(disappearingObjs[i]);
+  }
+
+  // If necessary, spawn some objects
+  if (nMinBodies < objects.length && nMinBodies < 25) nMinBodies++;
+  if (objects.length < nMinBodies) SpawnObj();
+
+  // Remove unused bodies (here so it doesnt happen within worldStep)
+  for (let i = 0; i < bodiesToRemove.length; i++) {
+    world.remove(bodiesToRemove[i]);
+  }
+  bodiesToRemove = [];
+}
+
+
+
 function updateCam() {
   let delta = clock.getDelta();
 
@@ -427,10 +427,12 @@ function render() {
 
 
 function onWindowResize(){
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
+
+    camDist = THREE.MathUtils.clamp(4 / camera.aspect, 4, 6);
+    camTarget = new THREE.Vector3(0, Math.max(1.3 - camera.aspect, 0.3), 0);
 }
 
 
