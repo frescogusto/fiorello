@@ -1,8 +1,8 @@
-var world, mass, body, shape, timeStep = 1 / 60,
-  camera, scene, renderer, geometry, material, mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0;
+var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material,
+    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, tornadoMag = 0;
-var insanity = false;
+var insanity = false, insanityMag = 0;
 var enableSpawn = false;
 
 // To be synced
@@ -11,10 +11,15 @@ var prefabs = [];
 var bodiesToRemove = [];
 var disappearingObjs = [];
 var staticGroup;
+var loadedGLTF;
+var earthquakeAudio, tornadoAudio, insanityAudio, earthquakeAudioSource, tornadoAudioSource, insanityAudioSource;
+var painAudios = [];
 var N = 0;
 
 // SETTINGS
-const modelUrls = ['3d/STANZA 2.gltf', '3d/STANZA 3.gltf']
+const modelUrls = ['3d/STANZA1.gltf', '3d/STANZA2.gltf', '3d/STANZA3.gltf'];
+const effectsAudioUrls = ['audio/earthquake.mp3', 'audio/tornado.mp3', 'audio/insanity.mp3'];
+const painAudioUrls = ['audio/earthquake.mp3']
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 0.8, 0);
 const camDist = 4;
@@ -27,32 +32,49 @@ const nMaxBodies = 50;
 
 
 
-initThree();
-initCannon();
-initControls();
-
 
 const manager = new THREE.LoadingManager();
-manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
-	//console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
-};
 manager.onLoad = function ( ) {
 	console.log( 'Loading complete!');
-  animate();
+  // init();
 };
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
-	//console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 };
 manager.onError = function ( url ) {
-	//console.log( 'There was an error loading ' + url );
+	console.log( 'There was an error loading ' + url );
 };
 
 const loader = new THREE.GLTFLoader(manager);
 let fileIndex = Math.floor(Math.random() * modelUrls.length)
 loader.load(modelUrls[fileIndex], function(gltf) {
   console.log(gltf);
-  LoadObjects(gltf.scene.children, true);
+  loadedGLTF = gltf;
 });
+
+const audioLoader = new THREE.AudioLoader(manager);
+audioLoader.load( effectsAudioUrls[0], function( buffer ) { earthquakeAudio = buffer });
+audioLoader.load( effectsAudioUrls[1], function( buffer ) { tornadoAudio = buffer });
+audioLoader.load( effectsAudioUrls[2], function( buffer ) { insanityAudio = buffer });
+// for (let i = 0; i < painAudioUrls.length; i++) {
+//   audioLoader.load( painAudioUrls[i], function( buffer ) { painAudios.push(buffer) });
+// }
+
+
+
+function init() {
+  const overlay = document.getElementById( 'overlay' );
+	overlay.remove();
+
+  initThree();
+  initCannon();
+  initControls();
+  initAudio();
+
+  LoadObjects(loadedGLTF.scene.children, true);
+
+  animate();
+}
 
 
 
@@ -65,6 +87,10 @@ function initThree() {
   camera.position.z = 5.5;
   camera.position.y = 1.5;
   scene.add(camera);
+
+  listener = new THREE.AudioListener();
+  camera.add(listener);
+  console.log(camera);
 
   // // floor
   // geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
@@ -190,6 +216,31 @@ function initControls() {
 
 
 
+function initAudio() {
+
+  console.log("Init audio");
+  // Resume audio context
+  var context = THREE.AudioContext.getContext();
+  if (context != null) context.resume();
+
+  earthquakeAudioSource = new THREE.Audio( listener );
+  earthquakeAudioSource.setBuffer( earthquakeAudio );
+	earthquakeAudioSource.setLoop( true );
+	earthquakeAudioSource.setVolume( 0 );
+
+  tornadoAudioSource = new THREE.Audio( listener );
+  tornadoAudioSource.setBuffer( tornadoAudio );
+	tornadoAudioSource.setLoop( true );
+	tornadoAudioSource.setVolume( 0 );
+
+  insanityAudioSource = new THREE.Audio( listener );
+  insanityAudioSource.setBuffer( insanityAudio );
+	insanityAudioSource.setLoop( true );
+	insanityAudioSource.setVolume( 0 );
+}
+
+
+
 function animate() {
   requestAnimationFrame(animate);
   // orbit.update();
@@ -254,8 +305,11 @@ function clearExcessObjects() {
 function applyEffects() {
   // Earthquake
   if (earthquakeMag > 0.05 || earthquake) {
-    if (earthquake) earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, 1, 0.02);
-    else earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, 0, 0.02);
+    if (earthquake) earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, 1, 0.03);
+    else earthquakeMag = THREE.MathUtils.lerp(earthquakeMag, 0, 0.03);
+
+    if (!earthquakeAudioSource.isPlaying) earthquakeAudioSource.play();
+    earthquakeAudioSource.setVolume(0.5 * earthquakeMag);
 
     if (renderer.info.render.frame % 5 == 0) {
       let x = (Math.random() * 0.03 - 0.015) * earthquakeMag;
@@ -265,12 +319,16 @@ function applyEffects() {
     }
   } else {
     staticGroup.body.position.setZero();
+    if (earthquakeAudioSource.isPlaying) earthquakeAudioSource.stop();
   }
 
   // Tornado
   if (tornadoMag > 0.05 || tornado) {
-    if (tornado) tornadoMag = THREE.MathUtils.lerp(tornadoMag, 1, 0.02);
-    else tornadoMag = THREE.MathUtils.lerp(tornadoMag, 0, 0.02);
+    if (tornado) tornadoMag = THREE.MathUtils.lerp(tornadoMag, 1, 0.03);
+    else tornadoMag = THREE.MathUtils.lerp(tornadoMag, 0, 0.03);
+
+    if (!tornadoAudioSource.isPlaying) tornadoAudioSource.play();
+    tornadoAudioSource.setVolume(0.5 * tornadoMag);
 
     for (let i = 0; i < objects.length; i++) {
       let distFromCenter = Math.sqrt(objects[i].body.position.x * objects[i].body.position.x + objects[i].body.position.z * objects[i].body.position.z);
@@ -281,19 +339,34 @@ function applyEffects() {
       let force = new CANNON.Vec3(floatForce.x + centerForce.x + rotationForce.x, floatForce.y + centerForce.y + rotationForce.y, floatForce.z + centerForce.z + rotationForce.z).scale(tornadoMag);
       objects[i].body.applyForce(force, objects[i].body.position);
     }
+  } else {
+    if (tornadoAudioSource.isPlaying) tornadoAudioSource.stop();
   }
 
   // Insanity
-  if (insanity &&  renderer.info.render.frame % 2 == 0) {
-    for (let i = 0; i < objects.length; i++) {
-      let chanceToFreeze = Math.random();
-      if (chanceToFreeze < 0.005) {
-        objects[i].body.velocity.setZero();
-        objects[i].body.angularVelocity.setZero();
-      } else {
-        objects[i].body.velocity = new CANNON.Vec3(objects[i].body.velocity.x * -2.3 * Math.random(), objects[i].body.velocity.y * -2.3 * Math.random(), objects[i].body.velocity.z * -2.3 * Math.random());
+  if (insanityMag > 0.05 || insanity) {
+    if (insanity) insanityMag = THREE.MathUtils.lerp(insanityMag, 1, 0.03);
+    else insanityMag = THREE.MathUtils.lerp(insanityMag, 0, 0.03);
+
+    if (!insanityAudioSource.isPlaying) insanityAudioSource.play();
+    insanityAudioSource.setVolume(insanityMag);
+
+    if (renderer.info.render.frame % 2 == 0) {
+      for (let i = 0; i < objects.length; i++) {
+        let chanceToFreeze = Math.random();
+        if (chanceToFreeze < 0.01) {
+          objects[i].body.velocity.setZero();
+          objects[i].body.angularVelocity.setZero();
+        } else {
+          let velX = objects[i].body.velocity.x * THREE.MathUtils.lerp(1, -2.3 * Math.random(), insanityMag);
+          let velY = objects[i].body.velocity.y * THREE.MathUtils.lerp(1, -2.3 * Math.random(), insanityMag);
+          let velZ = objects[i].body.velocity.z * THREE.MathUtils.lerp(1, -2.3 * Math.random(), insanityMag);
+          objects[i].body.velocity = new CANNON.Vec3(velX, velY, velZ);
+        }
       }
     }
+  } else {
+    if (insanityAudioSource.isPlaying) insanityAudioSource.stop();
   }
 
   // Apply physics to three.js
@@ -586,12 +659,19 @@ function SpawnObj() {
 
 function Click() {
 
+  // // Turn on audio if needed
+  // if (!audioOn) {
+  //   audioOn = true;
+  //   initAudio();
+  // }
+
+  // Get raycast
   raycaster.setFromCamera(mouse, camera);
   const intersect = raycaster.intersectObjects(objects, true)[0];
   if (intersect == null) return;
 
+  // Apply force
   let direction = new CANNON.Vec3(intersect.point.x - camera.position.x, intersect.point.y - camera.position.y, intersect.point.z - camera.position.z);
-
   if (intersect.object.parent == scene) {
     Explode(intersect.object, direction);
   } else if (intersect.object.parent.parent == scene) {
