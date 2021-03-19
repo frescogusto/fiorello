@@ -30,9 +30,23 @@ const nMaxBodies = 50;
 initThree();
 initCannon();
 initControls();
-animate();
+
 
 const manager = new THREE.LoadingManager();
+manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
+	//console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+};
+manager.onLoad = function ( ) {
+	console.log( 'Loading complete!');
+  animate();
+};
+manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+	//console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+};
+manager.onError = function ( url ) {
+	//console.log( 'There was an error loading ' + url );
+};
+
 const loader = new THREE.GLTFLoader(manager);
 let fileIndex = Math.floor(Math.random() * modelUrls.length)
 loader.load(modelUrls[fileIndex], function(gltf) {
