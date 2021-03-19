@@ -243,7 +243,10 @@ function initAudio() {
   console.log("Init audio");
   // Resume audio context
   var context = THREE.AudioContext.getContext();
-  if (context != null) context.resume();
+  if (context != null) {
+    context.resume();
+    audioOn = true;
+  }
 
   earthquakeAudioSource = new THREE.Audio( listener );
   earthquakeAudioSource.setBuffer( earthquakeAudio );
@@ -806,6 +809,19 @@ function ToggleInsanity(ele) {
   } else {
     ele.classList.remove('button--active')
   }
+}
+
+
+function ToggleSound() {
+  var context = THREE.AudioContext.getContext();
+  if (context == null) return;
+
+  if (audioOn) {
+    context.suspend();
+  } else {
+    context.resume();
+  }
+  audioOn = !audioOn;
 }
 
 
