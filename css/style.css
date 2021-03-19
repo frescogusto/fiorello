@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  background: #dfebf5;
+  background: #ffbcbc;
   text-align: center;
   font-size: 36px;
   line-height: 36px;
@@ -13,31 +13,36 @@ body {
   /* background: #1456fe; */
 }
 
+.scene-0,
+.scene-0 #overlay {
+  background: #ffbcbc;
+}
+.scene-0 svg g {
+  stroke: #ffbcbc;
+}
+
+.scene-1,
+.scene-1 #overlay {
+  background: #c3dcf0;
+}
+.scene-1 svg g {
+  stroke: #c3dcf0;
+}
+
+.scene-2,
+.scene-2 #overlay {
+  background: #9ce1e1;
+}
+.scene-2 svg g {
+  stroke: #9ce1e1;
+}
+
 canvas {
   display: block;
   pointer-events: none;
   position: fixed;
   top: 0;
   z-index: 1;
-}
-
-.button {
-  /* grid-column-end: span 2; */
-  margin-right: 18px;
-  cursor: pointer;
-  color: white;
-  pointer-events: auto;
-  /* padding: 15px 36px 9px;
-  background: white;
-  border: 4px solid; */
-  border: 4px solid;
-  border-radius: 100%;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 #interface {
@@ -48,8 +53,21 @@ canvas {
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 36px;
+  padding: 18px;
   z-index: 0;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  padding: 18px 9px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
 }
 
 header {
@@ -75,6 +93,21 @@ header svg {
   height: 24.8vw;
 }
 
+.button {
+  margin: 0 9px;
+  cursor: pointer;
+  color: white;
+  pointer-events: auto;
+  border: 4px solid;
+  border-radius: 100%;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
 .top {
   position: absolute;
   top: 12px;
@@ -93,18 +126,6 @@ header svg {
   z-index: -1;
   display: flex;
   justify-content: space-between;
-}
-
-footer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  box-sizing: border-box;
-  padding: 36px;
-  width: 50%;
-  display: flex;
-  justify-content: space-evenly;
-  pointer-events: none;
 }
 
 .button--small {
@@ -144,17 +165,7 @@ footer {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
   text-align: center;
-  cursor: pointer;
-  border: 4px solid;
-  border-radius: 100%;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 #loading {
@@ -181,6 +192,21 @@ footer {
 }
 
 .scene-2 .button--active {
+  color: #f3972f;
+  border-color: #23d5d4;
+}
+
+.scene-0 .button:hover {
+  color: #ff3b69;
+  border-color: #36de95;
+}
+
+.scene-1 .button:hover {
+  color: #2665ff;
+  border-color: #fff546;
+}
+
+.scene-2 .button:hover {
   color: #f3972f;
   border-color: #23d5d4;
 }
