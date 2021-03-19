@@ -44,7 +44,7 @@ manager.onLoad = function ( ) {
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 
-  document.getElementById('loading').innerHTML = Math.round(itemsLoaded / itemsTotal * 100) + ' %'
+  document.getElementById('loading').innerHTML = Math.round(itemsLoaded / itemsTotal * 100) + '%'
 };
 manager.onError = function ( url ) {
 	console.log( 'There was an error loading ' + url );

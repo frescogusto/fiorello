@@ -1,67 +1,89 @@
 body {
   margin: 0;
   padding: 0;
-  background: #dfebf5;
+  background: #ffbcbc;
   text-align: center;
   font-size: 36px;
-  line-height: 36px;
+  line-height: 1;
   font-family: "Union-Bold", serif;
   text-transform: uppercase;
   font-weight: bold;
   letter-spacing: -1px;
   text-transform: uppercase;
-  /* background: #1456fe; */
-  -webkit-touch-callout: none;
-    -webkit-user-select: none;
-     -khtml-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
+}
+
+.scene-0,
+.scene-0 #overlay {
+  background: #ffbcbc;
+}
+.scene-0 svg g {
+  stroke: #ffbcbc;
+}
+
+.scene-1,
+.scene-1 #overlay {
+  background: #f8d770;
+}
+.scene-1 svg g {
+  stroke: #f8d770;
+}
+
+.scene-2,
+.scene-2 #overlay {
+  background: #9ce1e1;
+}
+.scene-2 svg g {
+  stroke: #9ce1e1;
+}
+
+.scene-0 .button--active {
+  color: #ff3b69;
+  border-color: #36de95;
+}
+
+.scene-1 .button--active {
+  color: #2665ff;
+  border-color: #ff4944;
+}
+
+.scene-2 .button--active {
+  color: #f3972f;
+  border-color: #23d5d4;
+  color: #ab35b2;
+  border-color: #f3972f;
+}
+
+.scene-0 .button:hover {
+  color: #ff3b69;
+  border-color: #36de95;
+}
+
+.scene-1 .button:hover {
+  color: #2665ff;
+  border-color: #ff4944;
+}
+
+.scene-2 .button:hover {
+  color: #f3972f;
+  border-color: #23d5d4;
+  color: #ab35b2;
+  border-color: #f3972f;
 }
 
 canvas {
-  display: block;
   pointer-events: none;
   position: fixed;
   top: 0;
   z-index: 1;
 }
 
-.button {
-  /* grid-column-end: span 2; */
-  margin-right: 18px;
-  cursor: pointer;
-  color: white;
-  pointer-events: auto;
-  /* padding: 15px 36px 9px;
-  background: white;
-  border: 4px solid; */
-  border: 4px solid;
-  border-radius: 100%;
-}
-
-#interface {
-  display: flex;
-  justify-content: center;
-  position: fixed;
-  pointer-events: auto;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 36px;
-  z-index: 0;
-}
-
+#interface,
+footer,
 header {
   position: fixed;
-  top: 0;
   left: 0;
-  z-index: -1;
   box-sizing: border-box;
-  padding: 12px;
   width: 100%;
-  color: white;
-  pointer-events: none;
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
    -khtml-user-select: none; /* Konqueror HTML */
@@ -70,9 +92,94 @@ header {
           user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
+#interface,
+footer {
+  display: flex;
+  bottom: 0;
+  z-index: 0;
+}
+
+#interface {
+  justify-content: center;
+  pointer-events: auto;
+  padding: 18px;
+}
+
+footer {
+  justify-content: space-between;
+  padding: 18px 9px;
+  pointer-events: none;
+}
+
+header {
+  top: 0;
+  z-index: -1;
+  padding: 12px;
+  color: white;
+  pointer-events: none;
+}
+
+@media only screen and (max-width: 800px) {
+  header svg {
+    margin: 12px 0;
+  }
+  #interface {
+    justify-content: space-between;
+    bottom: 56px;
+    z-index: 2;
+  }
+  #interface .button {
+    margin: 0;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .scene-0 .button:hover {
+    color: white;
+    border-color: white;
+  }
+  .scene-1 .button:hover {
+    color: white;
+    border-color: white;
+  }
+  .scene-2 .button:hover {
+    color: white;
+    border-color: white;
+  }
+  body {
+    font-size: 24px;
+  }
+  footer .button {
+    width: 50%;
+  }
+  #interface {
+    display: block;
+    bottom: 44px;
+    z-index: 2;
+  }
+  #interface .button {
+    margin: 6px 0;
+  }
+}
+
 header svg {
   width: 100%;
   height: 24.8vw;
+}
+
+.button {
+  margin: 0 9px;
+  cursor: pointer;
+  color: white;
+  pointer-events: auto;
+  border: 4px solid;
+  border-radius: 100%;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 .top {
@@ -95,46 +202,13 @@ header svg {
   justify-content: space-between;
 }
 
-footer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  box-sizing: border-box;
-  padding: 36px;
-  width: 50%;
-  display: flex;
-  justify-content: space-evenly;
-  pointer-events: none;
-}
-
-.button--small {
-  box-sizing: border-box;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  pointer-events: auto;
-}
-
-.button--small div {
-  height: 60;
-  width: 60;
-  border-radius: 100%;
-}
-
-.button--small svg {
-  height: 60px;
-  width: 60px;
-}
-
 #overlay {
   position: absolute;
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
-  z-index: 2;
+  z-index: 10;
   margin: auto;
   background: #dfebf5;
 }
@@ -144,17 +218,7 @@ footer {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
   text-align: center;
-  cursor: pointer;
-  border: 4px solid;
-  border-radius: 100%;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 #loading {
@@ -168,19 +232,4 @@ footer {
 
 .hidden {
   display: none;
-}
-
-.scene-0 .button--active {
-  color: #ff3b69;
-  border-color: #36de95;
-}
-
-.scene-1 .button--active {
-  color: #2665ff;
-  border-color: #fff546;
-}
-
-.scene-2 .button--active {
-  color: #f3972f;
-  border-color: #23d5d4;
 }
