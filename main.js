@@ -87,9 +87,9 @@ function init() {
 function initThree() {
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xdfebf5);
+  // scene.background = new THREE.Color(0xdfebf5);
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100);
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 100);
   camera.position.z = 5.5;
   camera.position.y = 1.5;
   scene.add(camera);
@@ -134,7 +134,7 @@ function initThree() {
   light.shadow.camera.far = 500; // default
 
 
-  renderer = new THREE.WebGLRenderer();
+  renderer = new THREE.WebGLRenderer({alpha:true});
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setSize(window.innerWidth, window.innerHeight);
