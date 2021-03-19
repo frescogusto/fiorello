@@ -36,14 +36,10 @@ const nMaxBodies = 50;
 
 const manager = new THREE.LoadingManager();
 manager.onLoad = function ( ) {
-	console.log( 'Loading complete!');
-
   document.getElementById('loading').remove();
   document.getElementById('startButton').classList.remove('hidden');
 };
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
-	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
-
   document.getElementById('loading').innerHTML = Math.round(itemsLoaded / itemsTotal * 100) + '%'
 };
 manager.onError = function ( url ) {
@@ -54,7 +50,6 @@ const loader = new THREE.GLTFLoader(manager);
 let fileIndex = Math.floor(Math.random() * modelUrls.length)
 document.body.classList.add('scene-'+fileIndex)
 loader.load(modelUrls[fileIndex], function(gltf) {
-  console.log(gltf);
   loadedGLTF = gltf;
 });
 
@@ -99,7 +94,6 @@ function initThree() {
 
   listener = new THREE.AudioListener();
   camera.add(listener);
-  console.log(camera);
 
   // // floor
   // geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
@@ -238,7 +232,6 @@ function initControls() {
 
 function initAudio() {
 
-  console.log("Init audio");
   // Resume audio context
   var context = THREE.AudioContext.getContext();
   if (context != null) {
@@ -400,8 +393,6 @@ function clearExcessObjects() {
 
 function updateCam() {
   let delta = clock.getDelta();
-
-  console.log(gyroY);
 
   if (mobile) {
     camAngle = THREE.MathUtils.damp(camAngle, gyroY * horMovement, 0.9, delta);
@@ -755,7 +746,6 @@ function Explode(_group, _raycastVel = new CANNON.Vec3(0, 0, 0)) {
 
     let newPos = new CANNON.Vec3(newObj.position.x, newObj.position.y, newObj.position.z);
     let centerVel = pos.vsub(newPos).mult(15);
-    console.log(_raycastVel);
     newObj.body.velocity = centerVel.vadd(_raycastVel);
 
     scene.remove(child);
