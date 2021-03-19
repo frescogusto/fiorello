@@ -427,18 +427,12 @@ function render() {
 
 
 function onWindowResize(){
-<<<<<<< HEAD
-  renderer.setSize( window.innerWidth, window.innerHeight );
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-=======
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 
     camDist = THREE.MathUtils.clamp(4 / camera.aspect, 4, 6);
     camTarget = new THREE.Vector3(0, Math.max(1.3 - camera.aspect, 0.3), 0);
->>>>>>> 2b06af3ef5220c1c3724603daa662f64a1e18a33
 }
 
 
