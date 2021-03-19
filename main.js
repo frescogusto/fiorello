@@ -13,13 +13,14 @@ var disappearingObjs = [];
 var staticGroup;
 var loadedGLTF;
 var earthquakeAudio, tornadoAudio, insanityAudio, earthquakeAudioSource, tornadoAudioSource, insanityAudioSource;
-var spawnAudio, hitAudios = [];
+var spawnAudio, hitAudios = [], explosionAudios = [];
 var N = 0;
 
 // SETTINGS
 const modelUrls = ['3d/STANZA1.gltf', '3d/STANZA2.gltf', '3d/STANZA3.gltf'];
 const effectsAudioUrls = ['audio/earthquake.mp3', 'audio/tornado.mp3', 'audio/insanity.mp3'];
-const hitAudioUrls = ['audio/hit1.mp3', 'audio/hit2.mp3', 'audio/hit3.mp3', 'audio/hit4.mp3'];
+const explosionAudioUrls = ['audio/hit1.mp3', 'audio/hit2.mp3', 'audio/hit3.mp3', 'audio/hit4.mp3'];
+const hitAudioUrls = ['audio/thump1.mp3', 'audio/thump2.mp3', 'audio/thump3.mp3', 'audio/thump4.mp3'];
 const spawnAudioUrl = 'audio/pop.mp3';
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 0.8, 0);
@@ -62,6 +63,9 @@ audioLoader.load( effectsAudioUrls[0], function( buffer ) { earthquakeAudio = bu
 audioLoader.load( effectsAudioUrls[1], function( buffer ) { tornadoAudio = buffer });
 audioLoader.load( effectsAudioUrls[2], function( buffer ) { insanityAudio = buffer });
 audioLoader.load( spawnAudioUrl, function( buffer ) { spawnAudio = buffer });
+for (let i = 0; i < explosionAudioUrls.length; i++) {
+  audioLoader.load( explosionAudioUrls[i], function( buffer ) { explosionAudios.push(buffer) });
+}
 for (let i = 0; i < hitAudioUrls.length; i++) {
   audioLoader.load( hitAudioUrls[i], function( buffer ) { hitAudios.push(buffer) });
 }
@@ -697,9 +701,11 @@ function Click() {
 
   // Play audio
   if (hitObj.body.breakable) {
+    PlayOnce(explosionAudios[hitCount % explosionAudios.length]);
+  } else {
     PlayOnce(hitAudios[hitCount % hitAudios.length]);
-    hitCount++;
   }
+  hitCount++;
 }
 
 
