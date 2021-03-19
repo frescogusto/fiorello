@@ -52,6 +52,7 @@ manager.onError = function ( url ) {
 
 const loader = new THREE.GLTFLoader(manager);
 let fileIndex = Math.floor(Math.random() * modelUrls.length)
+document.body.classList.add('scene-'+fileIndex)
 loader.load(modelUrls[fileIndex], function(gltf) {
   console.log(gltf);
   loadedGLTF = gltf;
@@ -754,9 +755,9 @@ function ToggleEarthquake(ele) {
   earthquake = !earthquake;
 
   if (earthquake) {
-    ele.style.color = "lime";
+    ele.classList.add('button--active')
   } else {
-    ele.style.color = "black";
+    ele.classList.remove('button--active')
   }
 }
 
@@ -766,9 +767,9 @@ function ToggleTornado(ele) {
   tornado = !tornado;
 
   if (tornado) {
-    ele.style.color = "lime";
+    ele.classList.add('button--active')
   } else {
-    ele.style.color = "black";
+    ele.classList.remove('button--active')
   }
 }
 
@@ -777,9 +778,9 @@ function ToggleInsanity(ele) {
   insanity = !insanity;
 
   if (insanity) {
-    ele.style.color = "lime";
+    ele.classList.add('button--active')
   } else {
-    ele.style.color = "black";
+    ele.classList.remove('button--active')
   }
 }
 
