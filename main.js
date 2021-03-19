@@ -435,7 +435,7 @@ function onWindowResize(){
     renderer.setSize( window.innerWidth, window.innerHeight );
 
     camDist = THREE.MathUtils.clamp(4 / camera.aspect, 4, 6);
-    camTarget = new THREE.Vector3(0, Math.max(1.3 - camera.aspect, 0.3), 0);
+    camTarget = new THREE.Vector3(0, Math.max(1.3 - camera.aspect, 0.7), 0);
 
     mobile = window.innerWidth < 800;
 }
