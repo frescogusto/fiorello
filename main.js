@@ -80,9 +80,7 @@ function init() {
   initCannon();
   initControls();
   initAudio();
-
   LoadObjects(loadedGLTF.scene.children, true);
-
   animate();
 }
 
@@ -836,6 +834,23 @@ function PlayOnce(audio) {
 	source.setVolume( 0.7 );
   source.play();
   source = null;
+}
+
+
+
+function openFullscreen() {
+
+  var elem = document.documentElement;
+
+  if ( window.innerWidth >= 800 || window.innerHeight >= 600 ) return;
+
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
+  }
 }
 
 
