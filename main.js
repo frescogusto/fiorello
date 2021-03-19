@@ -1,5 +1,5 @@
 var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material,
-    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false;
+    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, tornadoMag = 0;
 var insanity = false, insanityMag = 0;
@@ -13,13 +13,14 @@ var disappearingObjs = [];
 var staticGroup;
 var loadedGLTF;
 var earthquakeAudio, tornadoAudio, insanityAudio, earthquakeAudioSource, tornadoAudioSource, insanityAudioSource;
-var painAudios = [];
+var spawnAudio, hitAudios = [];
 var N = 0;
 
 // SETTINGS
 const modelUrls = ['3d/STANZA1.gltf', '3d/STANZA2.gltf', '3d/STANZA3.gltf'];
 const effectsAudioUrls = ['audio/earthquake.mp3', 'audio/tornado.mp3', 'audio/insanity.mp3'];
-const painAudioUrls = ['audio/earthquake.mp3']
+const hitAudioUrls = ['audio/hit1.mp3', 'audio/hit2.mp3', 'audio/hit3.mp3', 'audio/hit4.mp3'];
+const spawnAudioUrl = 'audio/pop.mp3';
 const debugMode = false;
 const camTarget = new THREE.Vector3(0, 0.8, 0);
 const camDist = 4;
@@ -56,9 +57,10 @@ const audioLoader = new THREE.AudioLoader(manager);
 audioLoader.load( effectsAudioUrls[0], function( buffer ) { earthquakeAudio = buffer });
 audioLoader.load( effectsAudioUrls[1], function( buffer ) { tornadoAudio = buffer });
 audioLoader.load( effectsAudioUrls[2], function( buffer ) { insanityAudio = buffer });
-// for (let i = 0; i < painAudioUrls.length; i++) {
-//   audioLoader.load( painAudioUrls[i], function( buffer ) { painAudios.push(buffer) });
-// }
+audioLoader.load( spawnAudioUrl, function( buffer ) { spawnAudio = buffer });
+for (let i = 0; i < hitAudioUrls.length; i++) {
+  audioLoader.load( hitAudioUrls[i], function( buffer ) { hitAudios.push(buffer) });
+}
 
 
 
@@ -654,6 +656,9 @@ function SpawnObj() {
   let spawned = Instantiate(prefabs[index].clone());
 
   if (spawned == null) return;
+
+  // Play sound
+  PlayOnce(spawnAudio);
 }
 
 
@@ -670,14 +675,26 @@ function Click() {
   const intersect = raycaster.intersectObjects(objects, true)[0];
   if (intersect == null) return;
 
-  // Apply force
+  // Calculate hit data
   let direction = new CANNON.Vec3(intersect.point.x - camera.position.x, intersect.point.y - camera.position.y, intersect.point.z - camera.position.z);
+  let hitObj;
   if (intersect.object.parent == scene) {
-    Explode(intersect.object, direction);
+    hitObj = intersect.object;
   } else if (intersect.object.parent.parent == scene) {
-    Explode(intersect.object.parent, direction);
+    hitObj = intersect.object.parent;
   } else if (intersect.object.parent.parent.parent == scene) {
-    Explode(intersect.object.parent.parent, direction);
+    hitObj = intersect.object.parent.parent;
+  }
+
+  if (hitObj == null) return;
+
+  // Apply force
+  Explode(hitObj, direction);
+
+  // Play audio
+  if (hitObj.body.breakable) {
+    PlayOnce(hitAudios[hitCount % hitAudios.length]);
+    hitCount++;
   }
 }
 
@@ -760,6 +777,16 @@ function ToggleInsanity(ele) {
   } else {
     ele.style.color = "black";
   }
+}
+
+
+
+function PlayOnce(audio) {
+  let source = new THREE.Audio( listener );
+  source.setBuffer( audio );
+	source.setVolume( 1 );
+  source.play();
+  source = null;
 }
 
 
