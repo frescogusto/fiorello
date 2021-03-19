@@ -1,5 +1,5 @@
 var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material,
-    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0;
+    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0, gyroX, gyroY;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, tornadoMag = 0;
 var insanity = false, insanityMag = 0;
@@ -95,6 +95,7 @@ function initThree() {
   // scene.background = new THREE.Color(0xdfebf5);
 
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 100);
+  camera.near = 0;
   camera.position.z = 5.5;
   camera.position.y = 1.5;
   scene.add(camera);
@@ -213,6 +214,15 @@ function initControls() {
       Click();
     },
     false
+  );
+
+  // Giroscopio
+  window.addEventListener(
+    "deviceorientation",
+    event => {
+      gyroY = THREE.MathUtils.clamp(-event.gamma / 10, -9, 9);
+    },
+    true
   );
 
   // Orbit controls
@@ -389,10 +399,16 @@ function applyEffects() {
 
 function updateCam() {
   let delta = clock.getDelta();
-  camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
-  camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta)
-  let targetPos = new THREE.Vector3();
 
+  if (gyroY == null) {
+    camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
+    camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta);
+  } else {
+    camAngle = THREE.MathUtils.damp(camAngle, gyroY * horMovement, 0.9, delta);
+    camH = 1;
+  }
+
+  let targetPos = new THREE.Vector3();
   targetPos.x = camTarget.x + camDist * Math.cos(camAngle);
   targetPos.y = camTarget.y + camH;
   targetPos.z = camTarget.z + camDist * Math.sin(camAngle);
