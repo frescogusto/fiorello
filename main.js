@@ -220,8 +220,7 @@ function initControls() {
   window.addEventListener(
     "deviceorientation",
     event => {
-      gyroX = event.alpha;
-      gyroY = event.gamma;
+      gyroY = THREE.MathUtils.clamp(-event.gamma / 10, -9, 9);
     },
     true
   );
@@ -401,12 +400,12 @@ function applyEffects() {
 function updateCam() {
   let delta = clock.getDelta();
 
-  if (gyroX == null) {
+  if (gyroY == null) {
     camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
     camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta);
   } else {
     camAngle = THREE.MathUtils.damp(camAngle, gyroY * horMovement, 0.9, delta);
-    camH = THREE.MathUtils.damp(camH, gyroX * verMovement, 0.995, delta);
+    camH = 1;
   }
 
   let targetPos = new THREE.Vector3();
