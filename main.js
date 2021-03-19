@@ -1,4 +1,4 @@
-var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material,
+var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material, mobile = false,
     mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0, gyroX, gyroY, camDist = 4;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, tornadoMag = 0;
@@ -401,12 +401,14 @@ function clearExcessObjects() {
 function updateCam() {
   let delta = clock.getDelta();
 
-  if (gyroY == null) {
-    camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
-    camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta);
-  } else {
+  console.log(gyroY);
+
+  if (mobile) {
     camAngle = THREE.MathUtils.damp(camAngle, gyroY * horMovement, 0.9, delta);
     camH = 1;
+  } else {
+    camAngle = THREE.MathUtils.damp(camAngle, -mouse.x * horMovement, 0.9, delta);
+    camH = THREE.MathUtils.damp(camH, mouse.y * verMovement, 0.995, delta);
   }
 
   let targetPos = new THREE.Vector3();
@@ -434,6 +436,8 @@ function onWindowResize(){
 
     camDist = THREE.MathUtils.clamp(4 / camera.aspect, 4, 6);
     camTarget = new THREE.Vector3(0, Math.max(1.3 - camera.aspect, 0.3), 0);
+
+    mobile = window.innerWidth < 800;
 }
 
 
@@ -834,23 +838,6 @@ function PlayOnce(audio) {
 	source.setVolume( 0.7 );
   source.play();
   source = null;
-}
-
-
-
-function openFullscreen() {
-
-  var elem = document.documentElement;
-
-  if ( window.innerWidth >= 800 || window.innerHeight >= 600 ) return;
-
-  if (elem.requestFullscreen) {
-    elem.requestFullscreen();
-  } else if (elem.webkitRequestFullscreen) { /* Safari */
-    elem.webkitRequestFullscreen();
-  } else if (elem.msRequestFullscreen) { /* IE11 */
-    elem.msRequestFullscreen();
-  }
 }
 
 
