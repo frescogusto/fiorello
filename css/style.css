@@ -188,6 +188,7 @@ header svg {
   #interface {
     justify-content: space-between;
     z-index: 2;
+    bottom: 56px;
   }
   #interface .button {
     margin: 0;
@@ -220,6 +221,7 @@ header svg {
   }
   #interface {
     display: block;
+    bottom: 44px;
     padding: 9px 18px;
   }
   #interface .button {
