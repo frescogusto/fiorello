@@ -45,7 +45,7 @@ manager.onLoad = function ( ) {
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 
-  document.getElementById('loading').innerHTML = Math.round(itemsLoaded / itemsTotal * 100) + ' %'
+  document.getElementById('loading').innerHTML = Math.round(itemsLoaded / itemsTotal * 100) + '%'
 };
 manager.onError = function ( url ) {
 	console.log( 'There was an error loading ' + url );
@@ -94,7 +94,7 @@ function initThree() {
   scene = new THREE.Scene();
   // scene.background = new THREE.Color(0xdfebf5);
 
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 100);
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
   camera.near = 0;
   camera.position.z = 5.5;
   camera.position.y = 1.5;
