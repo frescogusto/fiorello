@@ -786,6 +786,8 @@ function ToggleInsanity(ele) {
 
 
 function PlayOnce(audio) {
+
+  // Crea un istanza di audiosource che si autodistrugge dopo il play
   let source = new THREE.Audio( listener );
   source.setBuffer( audio );
 	source.setVolume( 0.7 );

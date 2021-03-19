@@ -17,6 +17,17 @@
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
+    <div id="overlay">
+      <div id="loading">0 %</div>
+			<div id="startButton" class="hidden" onclick="init()">play</div>
+		</div>
+
+    <div id="interface">
+      <div class="button" onclick="ToggleEarthquake(this)">terremoto</div>
+      <div class="button" onclick="ToggleTornado(this)">tornado</div>
+      <div class="button" onclick="ToggleInsanity(this)">insanity</div>
+    </div>
+
     <script src="libs/cannon.js"></script>
     <script src="libs/three.js"></script>
     <script src="libs/ColladaLoader.js"></script>
@@ -26,16 +37,5 @@
     <script src="libs/CannonDebugRenderer.js"></script>
     <script src="libs/SceneUtils.js"></script>
     <script src="main.js"></script>
-
-    <div id="overlay">
-      <div id="loading">0 %</div>
-			<div id="startButton" class="hidden" onclick="init()">play</div>
-		</div>
-
-    <div class="interface">
-      <div class="button" onclick="ToggleEarthquake(this)">terremoto</div>
-      <div class="button" onclick="ToggleTornado(this)">tornado</div>
-      <div class="button" onclick="ToggleInsanity(this)">insanity</div>
-    </div>
   </body>
 </html>
