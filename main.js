@@ -37,10 +37,14 @@ const nMaxBodies = 50;
 const manager = new THREE.LoadingManager();
 manager.onLoad = function ( ) {
 	console.log( 'Loading complete!');
-  // init();
+
+  document.getElementById('loading').remove();
+  document.getElementById('startButton').classList.remove('hidden');
 };
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+
+  document.getElementById('loading').innerHTML = itemsLoaded / itemsTotal * 100 + ' %'
 };
 manager.onError = function ( url ) {
 	console.log( 'There was an error loading ' + url );
@@ -784,7 +788,7 @@ function ToggleInsanity(ele) {
 function PlayOnce(audio) {
   let source = new THREE.Audio( listener );
   source.setBuffer( audio );
-	source.setVolume( 1 );
+	source.setVolume( 0.7 );
   source.play();
   source = null;
 }
