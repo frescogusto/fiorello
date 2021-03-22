@@ -1,5 +1,5 @@
 var world, mass, body, shape, timeStep = 1 / 60, camera, listener, scene, renderer, geometry, material, mobile = false,
-    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0, gyroX, gyroY, camDist = 4;
+    mesh, orbit, mouse, raycaster, cannonDebugRenderer, camAngle, camH, clock, nMinBodies = 0, audioOn = false, hitCount = 0, gyroX = 0, gyroY = 0, camDist = 4;
 var earthquake = false, earthquakeMag = 0;
 var tornado = false, tornadoMag = 0;
 var insanity = false, insanityMag = 0;
@@ -394,7 +394,7 @@ function clearExcessObjects() {
 function updateCam() {
   let delta = clock.getDelta();
 
-  if (mobile) {
+  if (mobile && gyroY != null) {
     camAngle = THREE.MathUtils.damp(camAngle, gyroY * horMovement, 0.9, delta);
     camH = 1;
   } else {
