@@ -37,7 +37,6 @@ a {
 
 .button {
   margin: 0 9px;
-  cursor: pointer;
   color: white;
   pointer-events: auto;
   border: 4px solid;
@@ -221,51 +220,21 @@ header svg {
   display: none;
 }
 
-@media only screen and (max-width: 800px) {
-  header svg {
-    margin: 6px 0;
-  }
-  #interface {
-    -webkit-justify-content: space-between;
-    -moz-justify-content: space-between;
-    justify-content: space-between;
-    z-index: 2;
-    bottom: 56px;
-  }
-  #interface .button {
-    margin: 0;
-  }
-}
-
-@media only screen and (max-width: 600px) {
-  .scene-0 .button--active {
-    color: #ff3b69;
-    border-color: #36de95;
-  }
-  
-  .scene-1 .button--active {
-    color: #2665ff;
-    border-color: #ff4944;
-  }
-  
-  .scene-2 .button--active {
-    color: #f3972f;
-    border-color: #23d5d4;
-    color: #ab35b2;
-    border-color: #f3972f;
-  }
-  
+@media only screen and (max-width: 1080px) {
   body {
     font-size: 24px;
-  }
-  footer .button {
-    width: 50%;
   }
   .button {
     height: 32px;
   }
   .button--fix .button {
     padding: 3px 0;
+  }
+}
+
+@media only screen and (max-width: 600px) {  
+  footer .button {
+    width: 50%;
   }
   #interface {
     display: block;
@@ -275,4 +244,11 @@ header svg {
   #interface .button {
     margin: 6px 0;
   }
+  header svg {
+    margin: 6px 0;
+  }
+}
+
+* {
+  cursor: crosshair !important;
 }
