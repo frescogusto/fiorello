@@ -4,8 +4,17 @@
   src: url('../font/memphi.eot?#iefix') format('embedded-opentype'), url('../font/memphi.svg') format('svg'), url('../font/memphi.woff') format('woff'), url('../font/memphi.woff2') format('woff2');
 }
 
-a {
-  text-decoration: none;
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, div, li, blockquote, pre, a {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -22,6 +31,10 @@ body {
   text-transform: uppercase;
 }
 
+a {
+  text-decoration: none;
+}
+
 .button {
   margin: 0 9px;
   cursor: pointer;
@@ -30,7 +43,8 @@ body {
   border: 4px solid;
   height: 44px;
   box-sizing: border-box;
-  padding: 4px 0;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   border-radius: 100%;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -38,6 +52,9 @@ body {
        -moz-user-select: none; /* Old versions of Firefox */
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+.button--fix .button {
+  padding: 4px 0;
 }
 
 .scene-0,
@@ -95,6 +112,8 @@ header {
   position: fixed;
   left: 0;
   box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   width: 100%;
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -106,18 +125,26 @@ header {
 
 #interface,
 footer {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flexbox;
   display: flex;
   bottom: 0;
   z-index: 0;
 }
 
 #interface {
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
   justify-content: center;
   pointer-events: auto;
   padding: 18px;
 }
 
 footer {
+  -webkit-justify-content: space-between;
+  -moz-justify-content: space-between;
   justify-content: space-between;
   padding: 18px 9px;
   pointer-events: none;
@@ -136,24 +163,28 @@ header svg {
   height: 24.8vw;
 }
 
-.top {
+.top,
+.bottom {
   position: absolute;
-  top: 12px;
+  z-index: -1;
   left: 18px;
   right: 18px;
-  z-index: -1;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-justify-content: space-between;
+  -moz-justify-content: space-between;
   justify-content: space-between;
 }
 
+.top {
+  top: 12px;
+}
+
 .bottom {
-  position: absolute;
   bottom: 12px;
-  left: 18px;
-  right: 18px;
-  z-index: -1;
-  display: flex;
-  justify-content: space-between;
 }
 
 #overlay {
@@ -174,6 +205,7 @@ header svg {
   transform: translate(-50%, -50%);
   text-align: center;
   min-width: 240px;
+  margin: 0;
 }
 
 #loading {
@@ -194,6 +226,8 @@ header svg {
     margin: 6px 0;
   }
   #interface {
+    -webkit-justify-content: space-between;
+    -moz-justify-content: space-between;
     justify-content: space-between;
     z-index: 2;
     bottom: 56px;
@@ -229,6 +263,8 @@ header svg {
   }
   .button {
     height: 32px;
+  }
+  .button--fix .button {
     padding: 3px 0;
   }
   #interface {
