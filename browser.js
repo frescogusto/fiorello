@@ -14,3 +14,19 @@ function isIE() {
 if (isSafari() || isIOS()) {
     document.body.classList.add('button--fix')
 }
+
+
+document.addEventListener('touchstart', function(e) {
+    if(window.innerWidth > window.innerHeight){
+        document.querySelector('.landscape').style.display = 'block'
+    } else {
+        document.querySelector('.landscape').style.display = 'none'
+    }
+    window.addEventListener("orientationchange", function() {
+        if (window.orientation == 0) {
+            document.querySelector('.landscape').style.display = 'none'
+        } else {
+            document.querySelector('.landscape').style.display = 'block'
+        }
+    }, false);
+})
